@@ -1,6 +1,6 @@
 {
   "name": "yl-big-screen",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "大屏可视化通用组件库",
   "type": "module",
   "main": "./dist/yl-big-screen.cjs",
@@ -18,6 +18,7 @@
     "dist"
   ],
   "scripts": {
+    "prepublishOnly": "npm run build",
     "build": "vite build",
     "build:playground": "vite build playground --config playground/vite.config.ts",
     "dev": "vite playground --config playground/vite.config.ts",

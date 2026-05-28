@@ -23,11 +23,7 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 </script>
 
 <template>
-  <ProjectScreenRoot
-    title="我的大屏"
-    page-background-image="/assets/my-bg.svg"
-    header-background-image="/assets/my-header.png"
-  >
+  <ProjectScreenRoot title="我的大屏">
     <template #header-left>
       <span>2026-05-28</span>
     </template>
@@ -130,8 +126,6 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
   :width="1920"
   :height="1080"
   scale-mode="fixed-height"
-  page-background-image="/bg/main-bg.svg"
-  header-background-image="/bg/header-bg.png"
   @title-click="handleTitleClick"
   @scale-update="handleScaleUpdate"
 >
@@ -354,16 +348,29 @@ function handleConfirm() {
 
 ## 背景图
 
-组件内置了默认的页面背景和标题栏背景图。如需自定义：
+组件内置了默认的页面背景和标题栏背景图（通过 `import` 打包进 dist，npm 引用时无需额外配置）。
+
+不传 `page-background-image` / `header-background-image` 即可使用默认图。
+
+如需自定义，请使用**业务项目里能访问到的 URL**（`public` 目录或 `import` 后的地址），不要使用包内 `src/assets` 路径：
 
 ```vue
-<ProjectScreenRoot
-  page-background-image="/my-background.svg"
-  header-background-image="/my-header-bg.png"
->
-  ...
-</ProjectScreenRoot>
+<script setup>
+import myPageBg from "@/assets/my-page-bg.png";
+import myHeaderBg from "@/assets/my-header-bg.png";
+</script>
+
+<template>
+  <ProjectScreenRoot
+    :page-background-image="myPageBg"
+    :header-background-image="myHeaderBg"
+  >
+    ...
+  </ProjectScreenRoot>
+</template>
 ```
+
+> 若传了 `page-background-image="/bg/xxx.svg"` 但文件不在宿主项目的 `public` 下，会表现为整页背景不显示，而头部默认图仍正常。
 
 ---
 

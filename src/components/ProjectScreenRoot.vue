@@ -149,20 +149,30 @@ function handleScaleUpdate(payload: any) {
   emit("scale-update", payload);
 }
 
+const pageBgUrl = computed(() =>
+  props.pageBackgroundImage ? props.pageBackgroundImage : defaultPageBg
+);
+
+const headerBgUrl = computed(() =>
+  props.headerBackgroundImage ? props.headerBackgroundImage : defaultHeaderBg
+);
+
 const rootStyle = computed(() => ({
   "--project-screen-header-height": `${props.headerHeight}px`,
   "--project-screen-gap": `${props.gap}px`,
   "--project-screen-content-padding": props.contentPadding,
-  background: props.pageBackgroundImage
-    ? `url(${props.pageBackgroundImage}) no-repeat center / 100% 100%`
-    : `url(${defaultPageBg}) no-repeat center / 100% 100%`,
-  backgroundColor: props.background
+  backgroundColor: props.background,
+  backgroundImage: `url(${pageBgUrl.value})`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "center",
+  backgroundSize: "100% 100%"
 }));
 
 const headerStyle = computed(() => ({
-  background: props.headerBackgroundImage
-    ? `url(${props.headerBackgroundImage}) no-repeat center top / 100% 100%`
-    : `url(${defaultHeaderBg}) no-repeat center top / 100% 100%`
+  backgroundImage: `url(${headerBgUrl.value})`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "center top",
+  backgroundSize: "100% 100%"
 }));
 
 defineExpose({
