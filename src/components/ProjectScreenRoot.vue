@@ -2,8 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, useSlots } from "vue";
 import DialogContainer from "./dialog/DialogContainer.vue";
 import ProjectScreenScale from "./ProjectScreenScale.vue";
-import defaultPageBg from "../assets/dapingbeijing.svg";
 import defaultHeaderBg from "../assets/bigTitle.png";
+import defaultPageBg from "../assets/dapingbeijing.svg";
 
 const props = defineProps({
   title: {
@@ -152,14 +152,13 @@ function handleScaleUpdate(payload: any) {
 const rootStyle = computed(() => ({
   "--project-screen-header-height": `${props.headerHeight}px`,
   "--project-screen-gap": `${props.gap}px`,
-  "--project-screen-content-padding": props.contentPadding,
-  backgroundColor: props.background,
-  backgroundImage: props.pageBackgroundImage
-    ? `url(${props.pageBackgroundImage})`
-    : `url(${defaultPageBg})`,
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "center",
-  backgroundSize: "cover"
+  "--project-screen-content-padding": props.contentPadding
+}));
+
+const rootBgStyle = computed(() => ({
+  background: props.pageBackgroundImage
+    ? `url(${props.pageBackgroundImage}) no-repeat center / cover`
+    : `url(${defaultPageBg}) no-repeat center / cover`
 }));
 
 const headerStyle = computed(() => ({
@@ -192,7 +191,7 @@ defineExpose({
     @update="handleScaleUpdate"
   >
     <template #default="screenState">
-      <div class="project-screen-root" :style="rootStyle">
+      <div class="project-screen-root" :style="[rootStyle, rootBgStyle]">
         <header v-if="showHeader" class="project-screen-header" :style="headerStyle">
           <div class="project-screen-header__side">
             <slot name="header-left" v-bind="screenState"/>
@@ -237,6 +236,7 @@ defineExpose({
   box-sizing: border-box;
   border: 1px solid rgba(98, 146, 221, 0.12);
   box-shadow: inset 0 0 0 1px rgba(125, 170, 255, 0.04);
+  background-color: #07111f;
   /* background 由 inline style 设置 */
 }
 

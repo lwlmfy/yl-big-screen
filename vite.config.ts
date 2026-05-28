@@ -2,6 +2,8 @@ import { defineConfig, Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
 import dts from "vite-plugin-dts";
 import { resolve } from "path";
+import { copyFileSync } from "fs";
+
 function injectCssPlugin(): Plugin {
   let cssCode: string | null = null;
 
@@ -30,6 +32,20 @@ function injectCssPlugin(): Plugin {
   };
 }
 
+function copyAssetsPlugin(): Plugin {
+  return {
+    name: "copy-assets",
+    apply: "build",
+    enforce: "post",
+    closeBundle() {
+      const files = ["dapingbeijing.svg"];
+      for (const f of files) {
+        copyFileSync(resolve(__dirname, "src/assets", f), resolve(__dirname, "dist", f));
+      }
+    }
+  };
+}
+
 export default defineConfig({
   plugins: [
     vue(),
@@ -38,7 +54,8 @@ export default defineConfig({
       include: ["src/**/*.ts", "src/**/*.vue"],
       outDir: "dist"
     }),
-    injectCssPlugin()
+    injectCssPlugin(),
+    copyAssetsPlugin()
   ],
   build: {
     cssCodeSplit: false,
