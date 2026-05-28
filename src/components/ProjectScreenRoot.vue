@@ -153,9 +153,13 @@ const rootStyle = computed(() => ({
   "--project-screen-header-height": `${props.headerHeight}px`,
   "--project-screen-gap": `${props.gap}px`,
   "--project-screen-content-padding": props.contentPadding,
-  background: props.pageBackgroundImage
-    ? `${props.background} url(${props.pageBackgroundImage}) no-repeat center / cover`
-    : `${props.background} url(${defaultPageBg}) no-repeat center / cover`
+  backgroundColor: props.background,
+  backgroundImage: props.pageBackgroundImage
+    ? `url(${props.pageBackgroundImage})`
+    : `url(${defaultPageBg})`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "center",
+  backgroundSize: "cover"
 }));
 
 const headerStyle = computed(() => ({
