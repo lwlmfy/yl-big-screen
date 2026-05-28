@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, useSlots } from "vue";
 import DialogContainer from "./dialog/DialogContainer.vue";
 import ProjectScreenScale from "./ProjectScreenScale.vue";
+import defaultPageBg from "../assets/dapingbeijing.svg";
+import defaultHeaderBg from "../assets/bigTitle.png";
 
 const props = defineProps({
   title: {
@@ -151,12 +153,15 @@ const rootStyle = computed(() => ({
   "--project-screen-header-height": `${props.headerHeight}px`,
   "--project-screen-gap": `${props.gap}px`,
   "--project-screen-content-padding": props.contentPadding,
-  ...(props.pageBackgroundImage
-    ? { "--project-screen-root-background": `${props.background} url(${props.pageBackgroundImage}) no-repeat center / cover` }
-    : {}),
-  ...(props.headerBackgroundImage
-    ? { "--project-screen-header-background": `url(${props.headerBackgroundImage}) no-repeat center top / 100% 100%` }
-    : {})
+  background: props.pageBackgroundImage
+    ? `${props.background} url(${props.pageBackgroundImage}) no-repeat center / cover`
+    : `${props.background} url(${defaultPageBg}) no-repeat center / cover`
+}));
+
+const headerStyle = computed(() => ({
+  background: props.headerBackgroundImage
+    ? `url(${props.headerBackgroundImage}) no-repeat center top / 100% 100%`
+    : `url(${defaultHeaderBg}) no-repeat center top / 100% 100%`
 }));
 
 defineExpose({
@@ -184,7 +189,7 @@ defineExpose({
   >
     <template #default="screenState">
       <div class="project-screen-root" :style="rootStyle">
-        <header v-if="showHeader" class="project-screen-header">
+        <header v-if="showHeader" class="project-screen-header" :style="headerStyle">
           <div class="project-screen-header__side">
             <slot name="header-left" v-bind="screenState"/>
           </div>
@@ -228,7 +233,7 @@ defineExpose({
   box-sizing: border-box;
   border: 1px solid rgba(98, 146, 221, 0.12);
   box-shadow: inset 0 0 0 1px rgba(125, 170, 255, 0.04);
-  background: var(--project-screen-root-background, #07111f url("../assets/dapingbeijing.svg") no-repeat center / cover);
+  /* background 由 inline style 设置 */
 }
 
 .project-screen-header {
@@ -241,7 +246,7 @@ defineExpose({
   padding: 0 24px;
   box-sizing: border-box;
   overflow: hidden;
-  background: var(--project-screen-header-background, url("../assets/bigTitle.png") no-repeat center top / 100% 100%);
+  /* background 由 inline style 设置 */
 }
 
 .project-screen-header__side {
