@@ -5,7 +5,7 @@ import { resolve } from "path";
 export default defineConfig(({ mode }) => ({
   plugins: [vue()],
   root: __dirname,
-  base: mode === "production" ? "/tiancaixiaoxiongmao/" : "/",
+  base: mode === "production" ? "/yl-big-screen/" : "/",
   resolve: {
     alias: {
       "@": resolve(__dirname, "../src")

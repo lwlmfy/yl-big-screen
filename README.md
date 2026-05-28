@@ -238,6 +238,37 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 
 ---
 
+### CardSubTitle
+
+轻量卡片容器组件，无装饰边框，只保留标题栏和内容区。适合嵌套在 ProjectPanelShell 内部做模块分区。
+
+**Props**
+
+| 属性 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `title` | `String` | `"标题"` | 模块标题 |
+| `showTitle` | `Boolean` | `true` | 是否显示标题栏 |
+
+**Slots**
+
+| 插槽 | 说明 |
+|---|---|
+| `default` | 卡片主体内容 |
+| `header-right` | 标题栏右侧自定义区域 |
+
+**使用示例**
+
+```vue
+<CardSubTitle title="监控指标">
+  <template #header-right>
+    <button>更多</button>
+  </template>
+  <div>内容...</div>
+</CardSubTitle>
+```
+
+---
+
 ### GlobalDialog
 
 独立弹窗组件。通常不直接使用，由 DialogContainer 和 dialogService 管理。
@@ -353,7 +384,7 @@ function handleConfirm() {
 
 ## 在线 Demo
 
-在线预览组件效果：[Gitee Pages 演示地址](https://lwlmfy.gitee.io/tiancaixiaoxiongmao)
+在线预览组件效果：[GitHub Pages 演示地址](https://lwlmfy.github.io/yl-big-screen)
 
 ## 本地预览
 
