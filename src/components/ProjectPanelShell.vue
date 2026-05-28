@@ -78,10 +78,12 @@ function handleTitleClick() {
   position: relative;
   border: 1px solid rgba(90, 154, 255, 0.34);
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(9, 33, 60, 0.65), rgba(8, 23, 44, 0.45)),
+  background: linear-gradient(180deg, rgba(9, 33, 60, 0.4), rgba(8, 23, 44, 0.25)),
   radial-gradient(circle at 50% 0, rgba(34, 157, 255, 0.06), transparent 40%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   overflow: visible;
-  padding: 20px 8px 8px;
+  padding: 28px 8px 8px;
   box-sizing: border-box;
   height: 100%;
 }
