@@ -5,6 +5,10 @@
 ## 快速开始
 
 ```bash
+# pnpm
+pnpm install yl-big-screen
+
+# 或 npm
 npm install yl-big-screen
 ```
 
@@ -393,9 +397,16 @@ import myHeaderBg from "@/assets/my-header-bg.png";
 
 在线预览组件效果：[GitHub Pages 演示地址](https://lwlmfy.github.io/yl-big-screen)
 
-## 本地预览
+## 本地开发
 
 ```bash
+# pnpm
+pnpm install
+pnpm dev
+
+# 或 npm
+npm install
 npm run dev
-# 打开 http://localhost:3100 查看组件效果
 ```
+
+启动后打开 http://localhost:3100 查看组件效果。
