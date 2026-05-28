@@ -1,0 +1,38 @@
+{
+  "name": "yl-big-screen",
+  "version": "0.1.0",
+  "description": "大屏可视化通用组件库",
+  "type": "module",
+  "main": "./dist/yl-big-screen.cjs",
+  "module": "./dist/yl-big-screen.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/yl-big-screen.mjs",
+      "require": "./dist/yl-big-screen.cjs"
+    },
+    "./*": "./dist/*"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite playground --config playground/vite.config.ts",
+    "dev:lib": "vite build --watch"
+  },
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "sass": "^1.80.0",
+    "typescript": "^5.5.0",
+    "vite": "^5.4.0",
+    "vite-plugin-dts": "^4.0.0",
+    "vue": "^3.5.0"
+  },
+  "keywords": ["vue", "big-screen", "dashboard", "visualization"],
+  "license": "MIT"
+}
