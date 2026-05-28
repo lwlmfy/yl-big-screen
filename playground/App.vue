@@ -3,6 +3,7 @@ import { defineComponent, h, ref } from "vue";
 import {
   ProjectScreenRoot,
   ProjectPanelShell,
+  CardSubTitle,
   openBigScreenDialog,
 } from "../src/index";
 
@@ -151,7 +152,8 @@ const rightItems = [
           <div style="padding: 12px 16px; color: #d7e6ff; font-size: 14px; line-height: 2;">
             <div><strong>ProjectScreenRoot</strong> — 大屏根布局，标题栏 + 自适应缩放 + 弹窗容器</div>
             <div><strong>ProjectScreenScale</strong> — 缩放容器，contain/cover/height/stretch 等模式</div>
-            <div><strong>ProjectPanelShell</strong> — 面板容器，浮动标题条，showTitle=false 可隐藏</div>
+            <div><strong>ProjectPanelShell</strong> — 面板容器，浮动标题条，磨砂效果，showTitle=false 可隐藏</div>
+            <div><strong>CardSubTitle</strong> — 轻量卡片容器，无边框，header-right 右侧插槽</div>
             <div><strong>openBigScreenDialog</strong> — Promise 风格弹窗，medium/large/full</div>
           </div>
         </ProjectPanelShell>
@@ -205,11 +207,18 @@ const rightItems = [
           </div>
         </ProjectPanelShell>
 
-        <ProjectPanelShell :show-title="false">
-          <div style="padding: 10px 14px; color: rgba(221,239,255,0.55); font-size: 13px; text-align: center;">
-            无标题面板 (showTitle=false)
+        <CardSubTitle title="CardSubTitle 组件">
+          <div style="padding: 10px 14px; color: #d7e6ff; font-size: 13px; line-height: 1.9;">
+            <div>纯卡片容器，无装饰边框</div>
+            <div>标题栏高度 35px，宽度 100%</div>
+            <div style="margin-top: 4px;">
+              <span style="color: rgba(221,239,255,0.45);">header-right 插槽 →</span>
+            </div>
           </div>
-        </ProjectPanelShell>
+          <template #header-right>
+            <span style="color: #3ee0ff; font-size: 13px;">操作按钮</span>
+          </template>
+        </CardSubTitle>
       </div>
     </div>
   </ProjectScreenRoot>
