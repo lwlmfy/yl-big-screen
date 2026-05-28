@@ -1,3 +1,4 @@
+export { default as CardSubTitle } from "./components/CardSubTitle.vue";
 export { default as ProjectScreenScale } from "./components/ProjectScreenScale.vue";
 export { default as ProjectPanelShell } from "./components/ProjectPanelShell.vue";
 export { default as ProjectScreenRoot } from "./components/ProjectScreenRoot.vue";
