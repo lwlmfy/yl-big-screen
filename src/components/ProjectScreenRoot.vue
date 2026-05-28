@@ -155,11 +155,11 @@ const rootStyle = computed(() => ({
   "--project-screen-content-padding": props.contentPadding
 }));
 
-const rootBgStyle = computed(() => ({
-  background: props.pageBackgroundImage
-    ? `url(${props.pageBackgroundImage}) no-repeat center / 100% 100%`
-    : `url(${defaultPageBg}) no-repeat center / 100% 100%`
-}));
+// const rootBgStyle = computed(() => ({
+//   background: props.pageBackgroundImage
+//     ? `url(${props.pageBackgroundImage}) no-repeat center / 100% 100%`
+//     : `url(${defaultPageBg}) no-repeat center / 100% 100%`
+// }));
 
 const headerStyle = computed(() => ({
   background: props.headerBackgroundImage
@@ -191,7 +191,7 @@ defineExpose({
     @update="handleScaleUpdate"
   >
     <template #default="screenState">
-      <div class="project-screen-root" :style="[rootStyle, rootBgStyle]">
+      <div class="project-screen-root" :style="[rootStyle]">
         <header v-if="showHeader" class="project-screen-header" :style="headerStyle">
           <div class="project-screen-header__side">
             <slot name="header-left" v-bind="screenState"/>
@@ -236,7 +236,8 @@ defineExpose({
   box-sizing: border-box;
   border: 1px solid rgba(98, 146, 221, 0.12);
   box-shadow: inset 0 0 0 1px rgba(125, 170, 255, 0.04);
-  /* background 由 inline style 设置 */
+  background: url("../assets/beijingpage.png") no-repeat center;
+  background-size: 100% 100%;
 }
 
 .project-screen-header {
