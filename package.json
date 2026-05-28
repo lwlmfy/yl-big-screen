@@ -1,6 +1,6 @@
 {
   "name": "yl-big-screen",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "大屏可视化通用组件库",
   "type": "module",
   "main": "./dist/yl-big-screen.cjs",
