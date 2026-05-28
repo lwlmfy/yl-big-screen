@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, useSlots } from "vue";
 import DialogContainer from "./dialog/DialogContainer.vue";
 import ProjectScreenScale from "./ProjectScreenScale.vue";
 import defaultHeaderBg from "../assets/bigTitle.png";
-import defaultPageBg from "../assets/beijingpage.jpg";
+import defaultPageBg from "../assets/beijingpage.png";
 
 const props = defineProps({
   title: {
