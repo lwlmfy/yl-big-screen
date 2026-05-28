@@ -236,7 +236,7 @@ defineExpose({
   box-sizing: border-box;
   border: 1px solid rgba(98, 146, 221, 0.12);
   box-shadow: inset 0 0 0 1px rgba(125, 170, 255, 0.04);
-  background: url("../assets/beijingpage.png") no-repeat center;
+  background: url("../assets/beijingpage.png") no-repeat!important;
   background-size: 100% 100%;
 }
 
