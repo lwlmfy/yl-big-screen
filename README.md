@@ -9,11 +9,9 @@ npm install yl-big-screen
 ```
 
 ```ts
-// main.ts
+// main.ts —— 无需手动引入样式，组件会自动注入
 import { createApp } from "vue";
 import App from "./App.vue";
-// 引入组件库样式（包含面板边框、弹窗框架等装饰样式）
-import "yl-big-screen/dist/assets/style.css";
 
 createApp(App).mount("#app");
 ```
@@ -237,7 +235,6 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
   <div>内容...</div>
 </ProjectPanelShell>
 ```
-```
 
 ---
 
@@ -353,6 +350,10 @@ function handleConfirm() {
 ```
 
 ---
+
+## 在线 Demo
+
+在线预览组件效果：[Gitee Pages 演示地址](https://lwlmfy.gitee.io/tiancaixiaoxiongmao)
 
 ## 本地预览
 

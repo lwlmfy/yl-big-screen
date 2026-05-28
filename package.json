@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "vite build",
+    "build:playground": "vite build playground --config playground/vite.config.ts",
     "dev": "vite playground --config playground/vite.config.ts",
     "dev:lib": "vite build --watch"
   },
