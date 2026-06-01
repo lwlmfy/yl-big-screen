@@ -102,6 +102,7 @@ const rightItems = [
     :header-height="80"
     :gap="16"
     content-padding="0 10px 10px"
+    :teleport-dialog="true"
   >
     <!-- 不传 header-left / header-right，右侧默认显示年月日时间 -->
 

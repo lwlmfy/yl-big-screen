@@ -101,6 +101,10 @@ const props = defineProps({
   titleClickable: {
     type: Boolean,
     default: true
+  },
+  teleportDialog: {
+    type: Boolean,
+    default: true
   }
 });
 
@@ -227,8 +231,26 @@ defineExpose({
         <main class="project-screen-content">
           <slot v-bind="screenState"/>
         </main>
-        <DialogContainer/>
+        <DialogContainer v-if="!teleportDialog"/>
       </div>
+
+      <Teleport v-if="teleportDialog" to="body">
+        <div
+          class="project-screen-teleport-dialog"
+          :style="{
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            width: `${screenState.contentWidth}px`,
+            height: `${screenState.contentHeight}px`,
+            transformOrigin: 'left top',
+            transform: `translate3d(${screenState.offsetX}px, ${screenState.offsetY}px, 0) scale(${screenState.scaleX}, ${screenState.scaleY})`,
+            pointerEvents: 'none'
+          }"
+        >
+          <DialogContainer/>
+        </div>
+      </Teleport>
     </template>
   </ProjectScreenScale>
 </template>

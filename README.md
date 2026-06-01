@@ -83,6 +83,7 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 | `useResizeObserver` | `Boolean` | `true` | 使用 ResizeObserver 监听容器尺寸 |
 | `listenWindowResize` | `Boolean` | `true` | 监听 window resize 事件 |
 | `containerSelector` | `String` | `""` | 自定义缩放参考容器的 CSS 选择器 |
+| `teleportDialog` | `Boolean` | `true` | 是否将弹窗容器 Teleport 到 body，避免缩放容器内 z-index/裁剪问题 |
 
 **Slots**
 
