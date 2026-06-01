@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, provide, ref, useSlots } from "vue";
+import { computed, onBeforeUnmount, onMounted, provide, ref, useSlots, watch } from "vue";
 import DialogContainer from "./dialog/DialogContainer.vue";
 import ProjectScreenScale from "./ProjectScreenScale.vue";
 import {
   SCREEN_SCALE_CONTEXT_KEY,
   type ScreenScaleSnapshot
 } from "../composables/screenScaleContext";
+import {
+  buildViewportScaleSnapshot,
+  getRawWindow,
+  resolveTeleportTarget
+} from "../composables/microAppViewport";
 import defaultHeaderBg from "../assets/bigTitle.png";
 import defaultPageBg from "../assets/beijingpage.png";
 
@@ -109,6 +114,11 @@ const props = defineProps({
   teleportDialog: {
     type: Boolean,
     default: true
+  },
+  /** micro-app 下可指定主应用挂载点选择器，默认挂到真实 window.document.body */
+  teleportTo: {
+    type: String,
+    default: ""
   }
 });
 
@@ -137,15 +147,26 @@ function updateTime() {
 onMounted(() => {
   updateTime();
   timer = setInterval(updateTime, 1000);
+
+  if (props.teleportDialog) {
+    teleportTarget.value = resolveTeleportTarget(props.teleportTo || undefined);
+    refreshViewportDialogScale();
+    bindViewportListeners();
+  }
 });
 
 onBeforeUnmount(() => {
   clearInterval(timer);
+  unbindViewportListeners();
 });
 
 function handleTitleClick(event: Event) {
   emit("title-click", event);
   if (!props.enableMenuBridge) {
+    return;
+  }
+  if ((window as any).__MICRO_APP_ENVIRONMENT__) {
+    (window as any).microApp?.dispatch({type: "openShowMenu"});
     return;
   }
   if (window.self !== window.top) {
@@ -154,19 +175,43 @@ function handleTitleClick(event: Event) {
 }
 
 const screenScaleSnapshot = ref<ScreenScaleSnapshot | null>(null);
+const teleportTarget = ref<string | HTMLElement>("body");
+let viewportResizeTarget: Window | null = null;
+
+function refreshViewportDialogScale() {
+  if (!props.teleportDialog) {
+    return;
+  }
+
+  screenScaleSnapshot.value = buildViewportScaleSnapshot({
+    designWidth: props.width,
+    designHeight: props.height,
+    scaleMode: props.scaleMode,
+    alignX: props.alignX,
+    alignY: props.alignY,
+    renderMode: props.renderMode,
+    minScale: props.minScale,
+    maxScale: props.maxScale,
+    disabledScale: props.disabledScale
+  });
+}
+
+function bindViewportListeners() {
+  viewportResizeTarget = getRawWindow();
+  viewportResizeTarget.addEventListener("resize", refreshViewportDialogScale);
+  viewportResizeTarget.addEventListener("scroll", refreshViewportDialogScale, true);
+  window.visualViewport?.addEventListener("resize", refreshViewportDialogScale);
+}
+
+function unbindViewportListeners() {
+  viewportResizeTarget?.removeEventListener("resize", refreshViewportDialogScale);
+  viewportResizeTarget?.removeEventListener("scroll", refreshViewportDialogScale, true);
+  window.visualViewport?.removeEventListener("resize", refreshViewportDialogScale);
+  viewportResizeTarget = null;
+}
 
 function handleScaleUpdate(payload: any) {
-  screenScaleSnapshot.value = {
-    contentWidth: payload.contentWidth,
-    contentHeight: payload.contentHeight,
-    scaleX: payload.scaleX,
-    scaleY: payload.scaleY,
-    offsetX: payload.offsetX,
-    offsetY: payload.offsetY,
-    anchorX: payload.anchorX,
-    anchorY: payload.anchorY,
-    renderMode: payload.renderMode
-  };
+  refreshViewportDialogScale();
   emit("scale-update", payload);
 }
 
@@ -175,6 +220,29 @@ const screenScaleContext = computed(() =>
 );
 
 provide(SCREEN_SCALE_CONTEXT_KEY, screenScaleContext);
+
+watch(
+  () => [
+    props.teleportDialog,
+    props.width,
+    props.height,
+    props.scaleMode,
+    props.renderMode,
+    props.alignX,
+    props.alignY,
+    props.disabledScale,
+    props.minScale,
+    props.maxScale,
+    props.teleportTo
+  ],
+  () => {
+    if (!props.teleportDialog) {
+      return;
+    }
+    teleportTarget.value = resolveTeleportTarget(props.teleportTo || undefined);
+    refreshViewportDialogScale();
+  }
+);
 
 const pageBgUrl = computed(() =>
   props.pageBackgroundImage ? props.pageBackgroundImage : defaultPageBg
@@ -257,8 +325,8 @@ defineExpose({
         <DialogContainer v-if="!teleportDialog"/>
       </div>
 
-      <!-- Teleport：外层铺满视口作遮罩；弹窗内容在 GlobalDialog 内按 screenScale 同步缩放 -->
-      <Teleport v-if="teleportDialog" to="body">
+      <!-- micro-app：挂到真实屏幕 body；弹窗按顶层视口缩放，全屏弹窗铺满整屏 -->
+      <Teleport v-if="teleportDialog" :to="teleportTarget">
         <div class="project-screen-teleport-dialog">
           <DialogContainer/>
         </div>
@@ -360,11 +428,13 @@ defineExpose({
   box-sizing: border-box;
 }
 
-/* Teleport 到 body，需高于主应用壳层 */
+/* 挂到主应用 body 时需足够高；铺满真实屏幕视口 */
 .project-screen-teleport-dialog {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2147483646;
   pointer-events: none;
 
   :deep(.dialog-mask--viewport),

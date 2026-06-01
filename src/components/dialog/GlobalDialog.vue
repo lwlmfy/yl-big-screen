@@ -2,7 +2,7 @@
 import { computed, inject, nextTick, ref, watch } from "vue";
 import {
   SCREEN_SCALE_CONTEXT_KEY,
-  buildScreenScaleLayerStyle
+  buildViewportCanvasStyle
 } from "../../composables/screenScaleContext";
 
 const props = defineProps({
@@ -23,13 +23,35 @@ const visible = ref(props.modelValue);
 
 const screenScaleContext = inject(SCREEN_SCALE_CONTEXT_KEY, null);
 const viewportOverlay = computed(() => !!screenScaleContext?.value);
+const basedOnViewport = computed(() => !!screenScaleContext?.value?.basedOnViewport);
+const isScreenFull = computed(() => basedOnViewport.value && props.size === "full");
 
-const scaleLayerStyle = computed(() => {
+const viewportScaleWrapStyle = computed(() => {
   const snapshot = screenScaleContext?.value;
-  if (!snapshot) {
+  if (!snapshot || snapshot.basedOnViewport === false) {
     return null;
   }
-  return buildScreenScaleLayerStyle(snapshot, "fixed");
+
+  if (snapshot.renderMode === "zoom") {
+    return {
+      zoom: snapshot.scaleX,
+      transform: "translate3d(0, 0, 0)"
+    };
+  }
+
+  return {
+    transform: `scale(${snapshot.scaleX}, ${snapshot.scaleY})`,
+    transformOrigin: "center center"
+  };
+});
+
+/** 全屏：与主屏同尺寸画布 + 屏幕缩放，弹窗内容 100% 铺满画布 */
+const viewportCanvasStyle = computed(() => {
+  const snapshot = screenScaleContext?.value;
+  if (!snapshot?.basedOnViewport) {
+    return null;
+  }
+  return buildViewportCanvasStyle(snapshot, "absolute");
 });
 
 watch(() => props.modelValue, val => {
@@ -59,40 +81,76 @@ nextTick(() => {
 </script>
 
 <template>
-  <!-- Teleport 模式：遮罩铺满视口，内容层与主屏同步 zoom/transform -->
+  <!-- Teleport + 顶层屏幕视口：全屏铺满整屏，其它尺寸按屏幕比例缩放 -->
   <div
     v-if="viewportOverlay"
     v-show="visible"
     class="global-dialog global-dialog--viewport"
   >
     <div class="dialog-mask dialog-mask--viewport" @click="maskClick"/>
-    <div
-      v-if="scaleLayerStyle"
-      class="dialog-scale-layer"
-      :style="scaleLayerStyle"
-    >
-      <div
-        class="dialog-box"
-        :class="size"
-        :style="{ width: width || '', height: height || '' }"
-        @click.stop
-      >
-        <header v-if="title" class="dialog-header">
-          <div></div>
-          <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
-          <button
-            type="button"
-            class="dialog-close"
-            aria-label="关闭"
-            @click.stop="handleClose"
-          >
-            <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
-          </button>
-        </header>
 
-        <div class="dialog-content">
-          <div class="fit dialog-content-scroll">
-            <slot />
+    <div v-if="isScreenFull" class="dialog-viewport-stage dialog-viewport-stage--full">
+      <div
+        v-if="viewportCanvasStyle"
+        class="dialog-viewport-canvas"
+        :style="viewportCanvasStyle"
+      >
+        <div
+          class="dialog-box full"
+          :style="{ width: width || '', height: height || '' }"
+          @click.stop
+        >
+          <header v-if="title" class="dialog-header">
+            <div></div>
+            <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
+            <button
+              type="button"
+              class="dialog-close"
+              aria-label="关闭"
+              @click.stop="handleClose"
+            >
+              <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
+            </button>
+          </header>
+
+          <div class="dialog-content">
+            <div class="fit dialog-content-scroll">
+              <slot />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="dialog-viewport-stage">
+      <div
+        v-if="viewportScaleWrapStyle"
+        class="dialog-viewport-scale"
+        :style="viewportScaleWrapStyle"
+      >
+        <div
+          class="dialog-box"
+          :class="size"
+          :style="{ width: width || '', height: height || '' }"
+          @click.stop
+        >
+          <header v-if="title" class="dialog-header">
+            <div></div>
+            <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
+            <button
+              type="button"
+              class="dialog-close"
+              aria-label="关闭"
+              @click.stop="handleClose"
+            >
+              <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
+            </button>
+          </header>
+
+          <div class="dialog-content">
+            <div class="fit dialog-content-scroll">
+              <slot />
+            </div>
           </div>
         </div>
       </div>
@@ -155,13 +213,30 @@ nextTick(() => {
   z-index: 1;
 }
 
-.dialog-scale-layer {
-  position: fixed;
+.dialog-viewport-stage {
+  position: absolute;
+  inset: 0;
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
+}
+
+.dialog-viewport-stage--full {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+}
+
+.dialog-viewport-scale,
+.dialog-viewport-canvas {
+  pointer-events: none;
+}
+
+.dialog-viewport-canvas .dialog-box {
+  pointer-events: auto;
 }
 
 .dialog-box {
