@@ -85,6 +85,8 @@ const state = reactive({
   scaleY: 1,
   offsetX: 0,
   offsetY: 0,
+  anchorX: 0,
+  anchorY: 0,
   renderMode: "zoom"
 });
 
@@ -234,6 +236,10 @@ function updateScale() {
   state.offsetY = Number.isFinite(offsetY) ? offsetY : 0;
   state.renderMode = getRenderMode(scaleX, scaleY);
 
+  const wrapperRect = wrapperRef.value?.getBoundingClientRect();
+  state.anchorX = (wrapperRect?.left ?? 0) + state.offsetX;
+  state.anchorY = (wrapperRect?.top ?? 0) + state.offsetY;
+
   emit("update", {
     width: safeWidth,
     height: safeHeight,
@@ -242,6 +248,10 @@ function updateScale() {
     scale: Math.min(scaleX, scaleY),
     offsetX: state.offsetX,
     offsetY: state.offsetY,
+    contentWidth: state.contentWidth,
+    contentHeight: state.contentHeight,
+    anchorX: state.anchorX,
+    anchorY: state.anchorY,
     renderMode: state.renderMode
   });
 }
@@ -277,6 +287,7 @@ function removeListeners() {
     window.removeEventListener("resize", refresh);
     window.removeEventListener("orientationchange", refresh);
     window.removeEventListener("fullscreenchange", refresh);
+    window.removeEventListener("scroll", refresh, true);
     window.visualViewport?.removeEventListener("resize", refresh);
   }
 
@@ -301,6 +312,7 @@ onMounted(() => {
     window.addEventListener("resize", refresh);
     window.addEventListener("orientationchange", refresh);
     window.addEventListener("fullscreenchange", refresh);
+    window.addEventListener("scroll", refresh, true);
     window.visualViewport?.addEventListener("resize", refresh);
   }
 });
@@ -370,6 +382,9 @@ defineExpose({
         :scale-y="state.scaleY"
         :offset-x="state.offsetX"
         :offset-y="state.offsetY"
+        :anchor-x="state.anchorX"
+        :anchor-y="state.anchorY"
+        :render-mode="state.renderMode"
       />
     </div>
   </div>

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from "vue";
+import { computed, inject, nextTick, ref, watch } from "vue";
+import {
+  SCREEN_SCALE_CONTEXT_KEY,
+  buildScreenScaleLayerStyle
+} from "../../composables/screenScaleContext";
 
 const props = defineProps({
   title: String,
@@ -16,6 +20,17 @@ const props = defineProps({
 
 defineEmits(["update:modelValue"]);
 const visible = ref(props.modelValue);
+
+const screenScaleContext = inject(SCREEN_SCALE_CONTEXT_KEY, null);
+const viewportOverlay = computed(() => !!screenScaleContext?.value);
+
+const scaleLayerStyle = computed(() => {
+  const snapshot = screenScaleContext?.value;
+  if (!snapshot) {
+    return null;
+  }
+  return buildScreenScaleLayerStyle(snapshot, "fixed");
+});
 
 watch(() => props.modelValue, val => {
   visible.value = val;
@@ -44,7 +59,48 @@ nextTick(() => {
 </script>
 
 <template>
-  <div class="dialog-mask fit" v-show="visible" @click="maskClick">
+  <!-- Teleport 模式：遮罩铺满视口，内容层与主屏同步 zoom/transform -->
+  <div
+    v-if="viewportOverlay"
+    v-show="visible"
+    class="global-dialog global-dialog--viewport"
+  >
+    <div class="dialog-mask dialog-mask--viewport" @click="maskClick"/>
+    <div
+      v-if="scaleLayerStyle"
+      class="dialog-scale-layer"
+      :style="scaleLayerStyle"
+    >
+      <div
+        class="dialog-box"
+        :class="size"
+        :style="{ width: width || '', height: height || '' }"
+        @click.stop
+      >
+        <header v-if="title" class="dialog-header">
+          <div></div>
+          <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
+          <button
+            type="button"
+            class="dialog-close"
+            aria-label="关闭"
+            @click.stop="handleClose"
+          >
+            <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
+          </button>
+        </header>
+
+        <div class="dialog-content">
+          <div class="fit dialog-content-scroll">
+            <slot />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 默认：弹窗在大屏缩放树内 -->
+  <div v-else class="dialog-mask fit" v-show="visible" @click="maskClick">
     <div
       class="dialog-box"
       :class="size"
@@ -74,6 +130,11 @@ nextTick(() => {
 </template>
 
 <style scoped lang="scss">
+.global-dialog--viewport {
+  position: absolute;
+  inset: 0;
+}
+
 .dialog-mask {
   position: fixed;
   inset: 0;
@@ -87,6 +148,22 @@ nextTick(() => {
   -webkit-backdrop-filter: blur(10px);
 }
 
+.dialog-mask--viewport {
+  position: absolute;
+  inset: 0;
+  display: block;
+  z-index: 1;
+}
+
+.dialog-scale-layer {
+  position: fixed;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
 .dialog-box {
   width: 1330px;
   height: 830px;
@@ -94,6 +171,7 @@ nextTick(() => {
   display: grid;
   grid-template-rows: 50px minmax(0, 1fr);
   background: url("../../assets/bigBounceFrameBG.svg") no-repeat center / cover;
+  pointer-events: auto;
 }
 
 .large {

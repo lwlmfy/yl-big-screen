@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useSlots } from "vue";
+import { computed, onBeforeUnmount, onMounted, provide, ref, useSlots } from "vue";
 import DialogContainer from "./dialog/DialogContainer.vue";
 import ProjectScreenScale from "./ProjectScreenScale.vue";
+import {
+  SCREEN_SCALE_CONTEXT_KEY,
+  type ScreenScaleSnapshot
+} from "../composables/screenScaleContext";
 import defaultHeaderBg from "../assets/bigTitle.png";
 import defaultPageBg from "../assets/beijingpage.png";
 
@@ -149,9 +153,28 @@ function handleTitleClick(event: Event) {
   }
 }
 
+const screenScaleSnapshot = ref<ScreenScaleSnapshot | null>(null);
+
 function handleScaleUpdate(payload: any) {
+  screenScaleSnapshot.value = {
+    contentWidth: payload.contentWidth,
+    contentHeight: payload.contentHeight,
+    scaleX: payload.scaleX,
+    scaleY: payload.scaleY,
+    offsetX: payload.offsetX,
+    offsetY: payload.offsetY,
+    anchorX: payload.anchorX,
+    anchorY: payload.anchorY,
+    renderMode: payload.renderMode
+  };
   emit("scale-update", payload);
 }
+
+const screenScaleContext = computed(() =>
+  props.teleportDialog ? screenScaleSnapshot.value : null
+);
+
+provide(SCREEN_SCALE_CONTEXT_KEY, screenScaleContext);
 
 const pageBgUrl = computed(() =>
   props.pageBackgroundImage ? props.pageBackgroundImage : defaultPageBg
@@ -234,20 +257,9 @@ defineExpose({
         <DialogContainer v-if="!teleportDialog"/>
       </div>
 
+      <!-- Teleport：外层铺满视口作遮罩；弹窗内容在 GlobalDialog 内按 screenScale 同步缩放 -->
       <Teleport v-if="teleportDialog" to="body">
-        <div
-          class="project-screen-teleport-dialog"
-          :style="{
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            width: `${screenState.contentWidth}px`,
-            height: `${screenState.contentHeight}px`,
-            transformOrigin: 'left top',
-            transform: `translate3d(${screenState.offsetX}px, ${screenState.offsetY}px, 0) scale(${screenState.scaleX}, ${screenState.scaleY})`,
-            pointerEvents: 'none'
-          }"
-        >
+        <div class="project-screen-teleport-dialog">
           <DialogContainer/>
         </div>
       </Teleport>
@@ -346,5 +358,18 @@ defineExpose({
   min-height: 0;
   padding: var(--project-screen-content-padding);
   box-sizing: border-box;
+}
+
+/* Teleport 到 body，需高于主应用壳层 */
+.project-screen-teleport-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+
+  :deep(.dialog-mask--viewport),
+  :deep(.dialog-box) {
+    pointer-events: auto;
+  }
 }
 </style>
