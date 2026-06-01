@@ -161,17 +161,17 @@ onBeforeUnmount(() => {
 });
 
 function handleTitleClick(event: Event) {
-  emit("title-click", event);
   if (!props.enableMenuBridge) {
     return;
   }
-  if ((window as any).__MICRO_APP_ENVIRONMENT__) {
-    (window as any).microApp?.dispatch({type: "openShowMenu"});
-    return;
-  }
-  if (window.self !== window.top) {
-    window.parent.postMessage({type: "openShowMenu"}, "*");
-  }
+  emit("title-click", event);
+  // if ((window as any).__MICRO_APP_ENVIRONMENT__) {
+  //   (window as any).microApp?.dispatch({type: "openShowMenu"});
+  //   return;
+  // }
+  // if (window.self !== window.top) {
+  //   window.parent.postMessage({type: "openShowMenu"}, "*");
+  // }
 }
 
 const screenScaleSnapshot = ref<ScreenScaleSnapshot | null>(null);
