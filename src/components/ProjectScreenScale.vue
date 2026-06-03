@@ -16,7 +16,7 @@ const props = defineProps({
   },
   renderMode: {
     type: String,
-    default: "zoom"
+    default: "transform"
   },
   alignX: {
     type: String,

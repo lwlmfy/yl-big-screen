@@ -63,7 +63,7 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 | `width` | `Number` | `1920` | 设计稿宽度 |
 | `height` | `Number` | `1080` | 设计稿高度 |
 | `scaleMode` | `String` | `"fixed-height"` | 缩放模式：`contain` / `cover` / `stretch` / `width` / `height` / `fixed-height` / `fixed-width` |
-| `renderMode` | `String` | `"zoom"` | 渲染模式：`auto` / `transform` / `zoom` |
+| `renderMode` | `String` | `"transform"` | 渲染模式：`auto` / `transform` / `zoom` |
 | `alignX` | `String` | `"center"` | 水平对齐：`start` / `center` / `end` |
 | `alignY` | `String` | `"center"` | 垂直对齐：`start` / `center` / `end` |
 | `disabledScale` | `Boolean` | `false` | 禁用缩放 |
@@ -159,7 +159,7 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 | `width` | `Number` | `1920` | 设计稿宽度 |
 | `height` | `Number` | `1080` | 设计稿高度 |
 | `mode` | `String` | `"fixed-height"` | 缩放模式 |
-| `renderMode` | `String` | `"zoom"` | 渲染模式：`auto` / `transform` / `zoom` |
+| `renderMode` | `String` | `"transform"` | 渲染模式：`auto` / `transform` / `zoom` |
 | `alignX` | `String` | `"center"` | 水平对齐 |
 | `alignY` | `String` | `"center"` | 垂直对齐 |
 | `disabled` | `Boolean` | `false` | 禁用缩放 |
@@ -214,6 +214,7 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 | 插槽 | 说明 |
 |---|---|
 | `default` | 面板主体内容 |
+| `title-icon` | 标题文字后面的图标区域，默认无内容 |
 
 **Events**
 
@@ -226,6 +227,14 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 ```vue
 <!-- 默认带标题 -->
 <ProjectPanelShell title="监控指标">
+  <div>内容...</div>
+</ProjectPanelShell>
+
+<!-- 标题带图标 -->
+<ProjectPanelShell title="监控指标">
+  <template #title-icon>
+    <img src="/icons/info.svg" width="20" height="20" />
+  </template>
   <div>内容...</div>
 </ProjectPanelShell>
 
@@ -247,6 +256,7 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 |---|---|---|---|
 | `title` | `String` | `"标题"` | 模块标题 |
 | `showTitle` | `Boolean` | `true` | 是否显示标题栏 |
+| `padding` | `String` | `"0 14px"` | 内容区内边距（CSS padding 值） |
 
 **Slots**
 
@@ -262,6 +272,11 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
   <template #header-right>
     <button>更多</button>
   </template>
+  <div>内容...</div>
+</CardSubTitle>
+
+<!-- 自定义内边距 -->
+<CardSubTitle title="监控指标" padding="12px 20px">
   <div>内容...</div>
 </CardSubTitle>
 ```
