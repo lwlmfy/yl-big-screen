@@ -12,7 +12,7 @@ onUnmounted(() => {
   <div>
     <transition-group name="dialog-fade" tag="div">
       <GlobalDialog
-        v-for="dialog in dialogs"
+        v-for="(dialog, index) in dialogs"
         :key="dialog.id"
         v-model="dialog.visible"
         :title="dialog.title"
@@ -23,6 +23,7 @@ onUnmounted(() => {
         :on-close="(result: any) => closeDialog(dialog.id, result)"
         :on-title-click="dialog.onTitleClick"
         :on-open="dialog.onOpen"
+        :depth="index"
       >
         <component
           :is="dialog.component"

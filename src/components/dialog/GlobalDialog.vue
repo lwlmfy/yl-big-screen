@@ -15,8 +15,13 @@ const props = defineProps({
   close: Function,
   onOpen: Function,
   onClose: Function,
-  onTitleClick: Function
+  onTitleClick: Function,
+  depth: { type: Number, default: 0 }
 });
+
+const maskZIndex = computed(() => 9 + props.depth * 2);
+const viewportMaskZIndex = computed(() => 1 + props.depth * 2);
+const viewportStageZIndex = computed(() => 2 + props.depth * 2);
 
 defineEmits(["update:modelValue"]);
 const visible = ref(props.modelValue);
@@ -87,9 +92,9 @@ nextTick(() => {
     v-show="visible"
     class="global-dialog global-dialog--viewport"
   >
-    <div class="dialog-mask dialog-mask--viewport" @click="maskClick"/>
+    <div class="dialog-mask dialog-mask--viewport" @click="maskClick" :style="{ zIndex: viewportMaskZIndex }"/>
 
-    <div v-if="isScreenFull" class="dialog-viewport-stage dialog-viewport-stage--full">
+    <div v-if="isScreenFull" class="dialog-viewport-stage dialog-viewport-stage--full" :style="{ zIndex: viewportStageZIndex }">
       <div
         v-if="viewportCanvasStyle"
         class="dialog-viewport-canvas"
@@ -122,7 +127,7 @@ nextTick(() => {
       </div>
     </div>
 
-    <div v-else class="dialog-viewport-stage">
+    <div v-else class="dialog-viewport-stage" :style="{ zIndex: viewportStageZIndex }">
       <div
         v-if="viewportScaleWrapStyle"
         class="dialog-viewport-scale"
@@ -158,7 +163,7 @@ nextTick(() => {
   </div>
 
   <!-- 默认：弹窗在大屏缩放树内 -->
-  <div v-else class="dialog-mask fit" v-show="visible" @click="maskClick">
+  <div v-else class="dialog-mask fit" v-show="visible" @click="maskClick" :style="{ zIndex: maskZIndex }">
     <div
       class="dialog-box"
       :class="size"
@@ -201,7 +206,7 @@ nextTick(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 9;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }

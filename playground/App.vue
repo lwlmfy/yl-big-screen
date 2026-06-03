@@ -160,6 +160,9 @@ const rightItems = [
         </ProjectPanelShell>
 
         <ProjectPanelShell title="功能演示" style="flex: 1;">
+          <template #title-icon>
+            <span style="font-size:18px;color:#ffd43b;margin-left:2px;">⭐</span>
+          </template>
           <div style="padding: 16px; color: #d7e6ff; font-size: 14px; display: flex; flex-direction: column; gap: 12px;">
             <p>点击按钮打开不同类型的弹窗：</p>
             <div style="display: flex; gap: 12px;">
@@ -208,7 +211,7 @@ const rightItems = [
           </div>
         </ProjectPanelShell>
 
-        <CardSubTitle title="CardSubTitle 组件">
+        <CardSubTitle title="CardSubTitle 组件" padding="10px 14px">
           <div style="padding: 10px 14px; color: #d7e6ff; font-size: 13px; line-height: 1.9;">
             <div>纯卡片容器，无装饰边框</div>
             <div>标题栏高度 35px，宽度 100%</div>

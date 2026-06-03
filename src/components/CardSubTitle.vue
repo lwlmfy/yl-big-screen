@@ -9,6 +9,10 @@ defineProps({
   showTitle: {
     type: Boolean,
     default: true
+  },
+  padding: {
+    type: String,
+    default: "0 14px"
   }
 });
 </script>
@@ -23,7 +27,7 @@ defineProps({
         <slot name="header-right" />
       </div>
     </div>
-    <div class="card-sub-title__body">
+    <div class="card-sub-title__body" :style="{ padding: padding }">
       <slot />
     </div>
   </div>
@@ -53,7 +57,7 @@ defineProps({
   align-items: center;
   background-image: url("../assets/card-sub-title.png");
   background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-size: contain;
   padding: 0 24px;
 }
 

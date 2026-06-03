@@ -428,13 +428,13 @@ defineExpose({
   box-sizing: border-box;
 }
 
-/* 挂到主应用 body 时需足够高；铺满真实屏幕视口 */
+/* teleport 到主应用 body，与默认弹窗遮罩层级一致；配合 Element 弹出层（默认 >=2000）正常显示 */
 .project-screen-teleport-dialog {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 2147483646;
+  z-index: 9;
   pointer-events: none;
 
   :deep(.dialog-mask--viewport),

@@ -61,6 +61,7 @@ function handleTitleClick() {
           :class="{ 'project-panel-shell__title-text--clickable': titleClickable }"
           @click="handleTitleClick"
         >{{ title }}</span>
+        <span class="project-panel-shell__title-icon"><slot name="title-icon" /></span>
       </div>
     </div>
     <div class="project-panel-shell__body" :class="bodyClass">
@@ -109,7 +110,7 @@ function handleTitleClick() {
   right: 0;
   top: -20px;
   height: 40px;
-  z-index: 2;
+  z-index: 9;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,7 +119,7 @@ function handleTitleClick() {
 
 .project-panel-shell__title {
   position: relative;
-  z-index: 3;
+  z-index: 9;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -149,6 +150,14 @@ function handleTitleClick() {
 
 .project-panel-shell__title-text--clickable {
   cursor: pointer;
+}
+
+.project-panel-shell__title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 4px;
 }
 
 .project-panel-shell__body {
