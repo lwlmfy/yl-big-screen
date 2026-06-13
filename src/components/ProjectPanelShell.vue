@@ -79,8 +79,8 @@ function handleTitleClick() {
   position: relative;
   border: 1px solid rgba(90, 154, 255, 0.34);
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(9, 33, 60, 0.4), rgba(8, 23, 44, 0.25)),
-  radial-gradient(circle at 50% 0, rgba(34, 157, 255, 0.06), transparent 40%);
+  background: linear-gradient(180deg, rgba(18, 55, 95, 0.28), rgba(12, 38, 70, 0.16)),
+  radial-gradient(circle at 50% 0, rgba(34, 157, 255, 0.08), transparent 40%);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   overflow: visible;
@@ -166,8 +166,8 @@ function handleTitleClick() {
   position: relative;
   margin: 0;
   overflow: auto;
-  background: linear-gradient(180deg, rgba(11, 35, 63, 0.08), rgba(10, 26, 47, 0.015)),
-  rgba(9, 28, 51, 0.012);
+  background: linear-gradient(180deg, rgba(15, 50, 85, 0.06), rgba(12, 38, 66, 0.02)),
+  rgba(14, 42, 72, 0.015);
 }
 
 .project-panel-shell__body::-webkit-scrollbar {

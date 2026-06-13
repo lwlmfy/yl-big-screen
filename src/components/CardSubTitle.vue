@@ -58,12 +58,12 @@ defineProps({
   background-image: url("../assets/card-sub-title.png");
   background-repeat: no-repeat;
   background-size: contain;
-  padding: 0 24px;
+  padding: 0 24px 4px;
 }
 
 .card-sub-title__title-text {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 900;
   letter-spacing: 0.12em;
   color: #d7e6ff;
   overflow: hidden;

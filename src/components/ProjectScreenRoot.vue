@@ -101,11 +101,7 @@ const props = defineProps({
   },
   showDateTime: {
     type: Boolean,
-    default: true
-  },
-  enableMenuBridge: {
-    type: Boolean,
-    default: true
+    default: false
   },
   titleClickable: {
     type: Boolean,
@@ -161,9 +157,6 @@ onBeforeUnmount(() => {
 });
 
 function handleTitleClick(event: Event) {
-  if (!props.enableMenuBridge) {
-    return;
-  }
   emit("title-click", event);
   // if ((window as any).__MICRO_APP_ENVIRONMENT__) {
   //   (window as any).microApp?.dispatch({type: "openShowMenu"});
@@ -302,7 +295,7 @@ defineExpose({
           <div class="project-screen-header__center">
             <div
               class="project-screen-title"
-              :class="{ 'project-screen-title--clickable': titleClickable || enableMenuBridge }"
+              :class="{ 'project-screen-title--clickable': titleClickable }"
               @click="handleTitleClick"
             >
               <slot name="title" v-bind="screenState">

@@ -296,9 +296,10 @@ nextTick(() => {
     min-height: 48px;
     margin: -4px -6px -4px 0;
     padding: 0;
-    border: 1px solid transparent;
+    border: 1px solid rgba(62, 224, 255, 0.45);
     border-radius: 10px;
-    background: rgba(8, 36, 68, 0.35);
+    background: rgba(8, 36, 68, 0.5);
+    box-shadow: 0 0 12px rgba(62, 224, 255, 0.15);
     cursor: pointer;
     transition:
       background 0.25s ease,
