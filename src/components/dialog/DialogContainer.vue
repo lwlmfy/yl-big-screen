@@ -20,6 +20,7 @@ onUnmounted(() => {
         :width="dialog.width"
         :height="dialog.height"
         :close-on-click-mask="dialog.closeOnClickMask"
+        :show-header="dialog.showHeader"
         :on-close="(result: any) => closeDialog(dialog.id, result)"
         :on-title-click="dialog.onTitleClick"
         :on-open="dialog.onOpen"

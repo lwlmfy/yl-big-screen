@@ -12,6 +12,7 @@ const props = defineProps({
   width: String,
   height: String,
   closeOnClickMask: { type: Boolean, default: true },
+  showHeader: { type: Boolean, default: true },
   close: Function,
   onOpen: Function,
   onClose: Function,
@@ -102,10 +103,11 @@ nextTick(() => {
       >
         <div
           class="dialog-box full"
+          :class="{ 'dialog-box--no-header': !showHeader }"
           :style="{ width: width || '', height: height || '' }"
           @click.stop
         >
-          <header v-if="title" class="dialog-header">
+          <header v-if="showHeader && title" class="dialog-header">
             <div></div>
             <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
             <button
@@ -117,6 +119,16 @@ nextTick(() => {
               <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
             </button>
           </header>
+
+          <button
+            v-if="!showHeader"
+            type="button"
+            class="dialog-close dialog-close--floating"
+            aria-label="关闭"
+            @click.stop="handleClose"
+          >
+            <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
+          </button>
 
           <div class="dialog-content">
             <div class="fit dialog-content-scroll">
@@ -135,11 +147,11 @@ nextTick(() => {
       >
         <div
           class="dialog-box"
-          :class="size"
+          :class="[size, { 'dialog-box--no-header': !showHeader }]"
           :style="{ width: width || '', height: height || '' }"
           @click.stop
         >
-          <header v-if="title" class="dialog-header">
+          <header v-if="showHeader && title" class="dialog-header">
             <div></div>
             <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
             <button
@@ -151,6 +163,16 @@ nextTick(() => {
               <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
             </button>
           </header>
+
+          <button
+            v-if="!showHeader"
+            type="button"
+            class="dialog-close dialog-close--floating"
+            aria-label="关闭"
+            @click.stop="handleClose"
+          >
+            <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
+          </button>
 
           <div class="dialog-content">
             <div class="fit dialog-content-scroll">
@@ -166,11 +188,11 @@ nextTick(() => {
   <div v-else class="dialog-mask fit" v-show="visible" @click="maskClick" :style="{ zIndex: maskZIndex }">
     <div
       class="dialog-box"
-      :class="size"
+      :class="[size, { 'dialog-box--no-header': !showHeader }]"
       :style="{ width: width || '', height: height || '' }"
       @click.stop
     >
-      <header v-if="title" class="dialog-header">
+      <header v-if="showHeader && title" class="dialog-header">
         <div></div>
         <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
         <button
@@ -182,6 +204,16 @@ nextTick(() => {
           <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
         </button>
       </header>
+
+      <button
+        v-if="!showHeader"
+        type="button"
+        class="dialog-close dialog-close--floating"
+        aria-label="关闭"
+        @click.stop="handleClose"
+      >
+        <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
+      </button>
 
       <div class="dialog-content">
         <div class="fit dialog-content-scroll">
@@ -264,6 +296,18 @@ nextTick(() => {
   height: 100%;
 }
 
+.dialog-box--no-header {
+  grid-template-rows: 1fr;
+  position: relative;
+}
+
+.dialog-close--floating {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  z-index: 5;
+}
+
 .dialog-header {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -287,68 +331,71 @@ nextTick(() => {
 
   .dialog-close {
     justify-self: end;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
+    margin: -4px -6px -4px 0;
     min-width: 48px;
     min-height: 48px;
-    margin: -4px -6px -4px 0;
-    padding: 0;
-    border: 1px solid rgba(62, 224, 255, 0.45);
-    border-radius: 10px;
-    background: rgba(8, 36, 68, 0.5);
-    box-shadow: 0 0 12px rgba(62, 224, 255, 0.15);
-    cursor: pointer;
-    transition:
-      background 0.25s ease,
-      border-color 0.25s ease,
-      box-shadow 0.25s ease,
-      transform 0.2s ease;
-
-    &:hover {
-      background: rgba(62, 224, 255, 0.18);
-      border-color: rgba(62, 224, 255, 0.45);
-      box-shadow: 0 0 16px rgba(62, 224, 255, 0.32);
-      transform: scale(1.06);
-
-      .dialog-close__icon {
-        transform: rotate(90deg);
-        filter: drop-shadow(0 0 10px rgba(62, 224, 255, 0.75));
-      }
-    }
-
-    &:active {
-      background: rgba(62, 224, 255, 0.32);
-      transform: scale(0.94);
-
-      .dialog-close__icon {
-        transform: rotate(90deg) scale(0.92);
-      }
-    }
-  }
-
-  .dialog-close__icon {
-    width: 20px;
-    height: 20px;
-    display: block;
-    pointer-events: none;
-    filter: drop-shadow(0 0 6px rgba(225, 234, 241, 0.45));
-    transition:
-      transform 0.28s cubic-bezier(0.34, 1.1, 0.64, 1),
-      filter 0.25s ease;
   }
 }
 
+.dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgba(62, 224, 255, 0.45);
+  border-radius: 10px;
+  background: rgba(8, 36, 68, 0.5);
+  box-shadow: 0 0 12px rgba(62, 224, 255, 0.15);
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    background: rgba(62, 224, 255, 0.18);
+    border-color: rgba(62, 224, 255, 0.45);
+    box-shadow: 0 0 16px rgba(62, 224, 255, 0.32);
+    transform: scale(1.06);
+
+    .dialog-close__icon {
+      transform: rotate(90deg);
+      filter: drop-shadow(0 0 10px rgba(62, 224, 255, 0.75));
+    }
+  }
+
+  &:active {
+    background: rgba(62, 224, 255, 0.32);
+    transform: scale(0.94);
+
+    .dialog-close__icon {
+      transform: rotate(90deg) scale(0.92);
+    }
+  }
+}
+
+.dialog-close__icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(225, 234, 241, 0.45));
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.1, 0.64, 1),
+    filter 0.25s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .dialog-header .dialog-close:hover .dialog-close__icon,
-  .dialog-header .dialog-close:active .dialog-close__icon {
+  .dialog-close:hover .dialog-close__icon,
+  .dialog-close:active .dialog-close__icon {
     transform: none;
   }
 
-  .dialog-header .dialog-close:hover,
-  .dialog-header .dialog-close:active {
+  .dialog-close:hover,
+  .dialog-close:active {
     transform: none;
   }
 }

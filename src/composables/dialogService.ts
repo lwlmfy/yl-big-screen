@@ -9,6 +9,7 @@ export interface DialogItem {
   width?: string
   height?: string
   closeOnClickMask?: boolean
+  showHeader?: boolean
   visible: boolean
   resolve: (result?: any) => void
   onTitleClick?: () => void

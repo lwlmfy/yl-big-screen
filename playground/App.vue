@@ -71,6 +71,34 @@ function openLargeDialog() {
   });
 }
 
+// ── 无头部弹窗内容 ──
+const NoHeaderDialog = defineComponent({
+  props: { close: Function },
+  setup() {
+    return () =>
+      h("div", { style: { padding: "20px", color: "#d7e6ff" } }, [
+        h("p", { style: { fontSize: "16px", marginBottom: "12px" } }, "无头部弹窗 (showHeader=false) —— 隐藏标题栏，仅保留右上角关闭按钮。"),
+        h("button", {
+          onClick: () => props.close?.(),
+          style: {
+            padding: "8px 20px", cursor: "pointer", marginTop: "12px",
+            background: "rgba(62,224,255,0.2)", border: "1px solid rgba(62,224,255,0.5)",
+            color: "#3ee0ff", borderRadius: "6px", fontSize: "14px"
+          }
+        }, "关闭")
+      ]);
+  }
+});
+
+function openNoHeaderDialog() {
+  openBigScreenDialog({
+    title: "无头部弹窗",
+    component: NoHeaderDialog,
+    showHeader: false,
+    size: "large"
+  });
+}
+
 // 演示数据
 const leftItems = [
   { label: "CPU 使用率", value: "47.2%", color: "#3ee0ff" },
@@ -174,6 +202,10 @@ const rightItems = [
                 style="padding:8px 20px;cursor:pointer;background:rgba(255,212,59,0.15);border:1px solid rgba(255,212,59,0.4);color:#ffd43b;border-radius:6px;font-size:14px"
                 @click="openLargeDialog"
               >大尺寸弹窗</button>
+              <button
+                style="padding:8px 20px;cursor:pointer;background:rgba(255,150,150,0.15);border:1px solid rgba(255,150,150,0.4);color:#ff8a8a;border-radius:6px;font-size:14px"
+                @click="openNoHeaderDialog"
+              >无头部弹窗</button>
             </div>
             <div style="color: rgba(221,239,255,0.55); font-size: 13px; line-height: 1.8; margin-top: 8px;">
               <div>标题右侧默认显示当前年月日时间</div>
