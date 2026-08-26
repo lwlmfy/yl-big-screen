@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, inject, nextTick, ref, watch } from "vue";
+import { computed, inject, ref, watch } from "vue";
 import {
   SCREEN_SCALE_CONTEXT_KEY,
   buildViewportCanvasStyle
 } from "../../composables/screenScaleContext";
+import DialogFrame from "./DialogFrame.vue";
 
 const props = defineProps({
   title: String,
@@ -13,28 +14,31 @@ const props = defineProps({
   height: String,
   closeOnClickMask: { type: Boolean, default: true },
   showHeader: { type: Boolean, default: true },
-  close: Function,
   onOpen: Function,
-  onClose: Function,
+  /** 关闭动画结束后回调（真正从列表移除） */
+  onClosed: Function,
   onTitleClick: Function,
   depth: { type: Number, default: 0 }
 });
+
+const emit = defineEmits(["update:modelValue"]);
 
 const maskZIndex = computed(() => 9 + props.depth * 2);
 const viewportMaskZIndex = computed(() => 1 + props.depth * 2);
 const viewportStageZIndex = computed(() => 2 + props.depth * 2);
 
-defineEmits(["update:modelValue"]);
-const visible = ref(props.modelValue);
+const visible = ref(!!props.modelValue);
+const openedOnce = ref(false);
 
 const screenScaleContext = inject(SCREEN_SCALE_CONTEXT_KEY, null);
 const viewportOverlay = computed(() => !!screenScaleContext?.value);
-const basedOnViewport = computed(() => !!screenScaleContext?.value?.basedOnViewport);
-const isScreenFull = computed(() => basedOnViewport.value && props.size === "full");
+const isScreenFull = computed(
+  () => !!screenScaleContext?.value && props.size === "full"
+);
 
 const viewportScaleWrapStyle = computed(() => {
   const snapshot = screenScaleContext?.value;
-  if (!snapshot || snapshot.basedOnViewport === false) {
+  if (!snapshot) {
     return null;
   }
 
@@ -51,22 +55,35 @@ const viewportScaleWrapStyle = computed(() => {
   };
 });
 
-/** 全屏：与主屏同尺寸画布 + 屏幕缩放，弹窗内容 100% 铺满画布 */
 const viewportCanvasStyle = computed(() => {
   const snapshot = screenScaleContext?.value;
-  if (!snapshot?.basedOnViewport) {
+  if (!snapshot) {
     return null;
   }
   return buildViewportCanvasStyle(snapshot, "absolute");
 });
 
-watch(() => props.modelValue, val => {
-  visible.value = val;
-});
+const panelAnimClass = computed(() =>
+  props.size === "full" ? "dialog-panel-anim dialog-panel-anim--full" : "dialog-panel-anim"
+);
+
+watch(
+  () => props.modelValue,
+  val => {
+    visible.value = !!val;
+  }
+);
+
+function requestClose() {
+  if (!visible.value) {
+    return;
+  }
+  visible.value = false;
+  emit("update:modelValue", false);
+}
 
 function handleClose() {
-  visible.value = false;
-  props.onClose?.();
+  requestClose();
 }
 
 function maskClick() {
@@ -79,152 +96,122 @@ function handleTitleClick() {
   props.onTitleClick?.();
 }
 
-nextTick(() => {
-  if (visible.value) {
+function onAfterEnter() {
+  if (!openedOnce.value) {
+    openedOnce.value = true;
     props.onOpen?.();
   }
-});
+}
+
+function onAfterLeave() {
+  props.onClosed?.();
+}
 </script>
 
 <template>
-  <!-- Teleport + 顶层屏幕视口：全屏铺满整屏，其它尺寸按屏幕比例缩放 -->
-  <div
-    v-if="viewportOverlay"
-    v-show="visible"
-    class="global-dialog global-dialog--viewport"
+  <Transition
+    name="bs-dialog"
+    appear
+    @after-enter="onAfterEnter"
+    @after-leave="onAfterLeave"
   >
-    <div class="dialog-mask dialog-mask--viewport" @click="maskClick" :style="{ zIndex: viewportMaskZIndex }"/>
-
-    <div v-if="isScreenFull" class="dialog-viewport-stage dialog-viewport-stage--full" :style="{ zIndex: viewportStageZIndex }">
-      <div
-        v-if="viewportCanvasStyle"
-        class="dialog-viewport-canvas"
-        :style="viewportCanvasStyle"
-      >
-        <div
-          class="dialog-box full"
-          :class="{ 'dialog-box--no-header': !showHeader }"
-          :style="{ width: width || '', height: height || '' }"
-          @click.stop
-        >
-          <header v-if="showHeader && title" class="dialog-header">
-            <div></div>
-            <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
-            <button
-              type="button"
-              class="dialog-close"
-              aria-label="关闭"
-              @click.stop="handleClose"
-            >
-              <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
-            </button>
-          </header>
-
-          <button
-            v-if="!showHeader"
-            type="button"
-            class="dialog-close dialog-close--floating"
-            aria-label="关闭"
-            @click.stop="handleClose"
-          >
-            <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
-          </button>
-
-          <div class="dialog-content">
-            <div class="fit dialog-content-scroll">
-              <slot />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-else class="dialog-viewport-stage" :style="{ zIndex: viewportStageZIndex }">
-      <div
-        v-if="viewportScaleWrapStyle"
-        class="dialog-viewport-scale"
-        :style="viewportScaleWrapStyle"
-      >
-        <div
-          class="dialog-box"
-          :class="[size, { 'dialog-box--no-header': !showHeader }]"
-          :style="{ width: width || '', height: height || '' }"
-          @click.stop
-        >
-          <header v-if="showHeader && title" class="dialog-header">
-            <div></div>
-            <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
-            <button
-              type="button"
-              class="dialog-close"
-              aria-label="关闭"
-              @click.stop="handleClose"
-            >
-              <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
-            </button>
-          </header>
-
-          <button
-            v-if="!showHeader"
-            type="button"
-            class="dialog-close dialog-close--floating"
-            aria-label="关闭"
-            @click.stop="handleClose"
-          >
-            <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
-          </button>
-
-          <div class="dialog-content">
-            <div class="fit dialog-content-scroll">
-              <slot />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 默认：弹窗在大屏缩放树内 -->
-  <div v-else class="dialog-mask fit" v-show="visible" @click="maskClick" :style="{ zIndex: maskZIndex }">
     <div
-      class="dialog-box"
-      :class="[size, { 'dialog-box--no-header': !showHeader }]"
-      :style="{ width: width || '', height: height || '' }"
-      @click.stop
+      v-if="visible"
+      class="global-dialog"
+      :class="{ 'global-dialog--viewport': viewportOverlay }"
+      :style="viewportOverlay ? undefined : { zIndex: maskZIndex }"
     >
-      <header v-if="showHeader && title" class="dialog-header">
-        <div></div>
-        <div class="dialog-title cursor-pointer" @click="handleTitleClick">{{ title }}</div>
-        <button
-          type="button"
-          class="dialog-close"
-          aria-label="关闭"
-          @click.stop="handleClose"
+      <!-- Teleport / 视口模式 -->
+      <template v-if="viewportOverlay">
+        <div
+          class="dialog-mask dialog-mask--viewport dialog-mask-anim"
+          :style="{ zIndex: viewportMaskZIndex }"
+          @click="maskClick"
+        />
+
+        <div
+          v-if="isScreenFull"
+          class="dialog-viewport-stage dialog-viewport-stage--full"
+          :style="{ zIndex: viewportStageZIndex }"
         >
-          <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
-        </button>
-      </header>
-
-      <button
-        v-if="!showHeader"
-        type="button"
-        class="dialog-close dialog-close--floating"
-        aria-label="关闭"
-        @click.stop="handleClose"
-      >
-        <img class="dialog-close__icon" src="../../assets/close_icon.svg" alt="" />
-      </button>
-
-      <div class="dialog-content">
-        <div class="fit dialog-content-scroll">
-          <slot />
+          <div
+            v-if="viewportCanvasStyle"
+            class="dialog-viewport-canvas"
+            :style="viewportCanvasStyle"
+          >
+            <div :class="panelAnimClass">
+              <DialogFrame
+                :title="title"
+                :size="size"
+                :width="width"
+                :height="height"
+                :show-header="showHeader"
+                @close="handleClose"
+                @title-click="handleTitleClick"
+              >
+                <slot />
+              </DialogFrame>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div
+          v-else
+          class="dialog-viewport-stage"
+          :style="{ zIndex: viewportStageZIndex }"
+        >
+          <div
+            v-if="viewportScaleWrapStyle"
+            class="dialog-viewport-scale"
+            :style="viewportScaleWrapStyle"
+          >
+            <div :class="panelAnimClass">
+              <DialogFrame
+                :title="title"
+                :size="size"
+                :width="width"
+                :height="height"
+                :show-header="showHeader"
+                @close="handleClose"
+                @title-click="handleTitleClick"
+              >
+                <slot />
+              </DialogFrame>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 缩放树内模式 -->
+      <template v-else>
+        <div class="dialog-mask fit dialog-mask-anim" @click="maskClick" />
+        <div class="dialog-inline-stage" @click.stop>
+          <div :class="panelAnimClass">
+            <DialogFrame
+              :title="title"
+              :size="size"
+              :width="width"
+              :height="height"
+              :show-header="showHeader"
+              @close="handleClose"
+              @title-click="handleTitleClick"
+            >
+              <slot />
+            </DialogFrame>
+          </div>
+        </div>
+      </template>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <style scoped lang="scss">
+.global-dialog {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
 .global-dialog--viewport {
   position: absolute;
   inset: 0;
@@ -235,12 +222,15 @@ nextTick(() => {
   inset: 0;
   pointer-events: auto;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 9;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+.dialog-mask.fit {
+  position: absolute;
+  display: block;
+  z-index: 0;
 }
 
 .dialog-mask--viewport {
@@ -248,6 +238,16 @@ nextTick(() => {
   inset: 0;
   display: block;
   z-index: 1;
+}
+
+.dialog-inline-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .dialog-viewport-stage {
@@ -261,9 +261,6 @@ nextTick(() => {
 }
 
 .dialog-viewport-stage--full {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
   display: block;
 }
 
@@ -272,153 +269,77 @@ nextTick(() => {
   pointer-events: none;
 }
 
-.dialog-viewport-canvas .dialog-box {
+.dialog-viewport-canvas :deep(.dialog-box),
+.dialog-panel-anim :deep(.dialog-box) {
   pointer-events: auto;
 }
 
-.dialog-box {
-  width: 1330px;
-  height: 830px;
-  overflow: hidden;
-  display: grid;
-  grid-template-rows: 50px minmax(0, 1fr);
-  background: url("../../assets/bigBounceFrameBG.svg") no-repeat center / cover;
+.dialog-panel-anim {
   pointer-events: auto;
+  transform-origin: center center;
+  will-change: opacity, transform;
 }
 
-.large {
-  width: 1570px;
-  height: 910px;
-}
-
-.full {
+.dialog-panel-anim--full {
   width: 100%;
   height: 100%;
 }
 
-.dialog-box--no-header {
-  grid-template-rows: 1fr;
-  position: relative;
-}
-
-.dialog-close--floating {
-  position: absolute;
-  top: 10px;
-  right: 20px;
-  z-index: 5;
-}
-
-.dialog-header {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: center;
-  background: url("../../assets/largePopUpBoxTitleBG.svg") no-repeat center / cover;
-  padding: 0 20px;
-
-  .dialog-title {
-    text-align: center;
-    line-height: normal;
-    white-space: nowrap;
-    background: linear-gradient(180deg, #ffffff 47.22%, #3ee0ff 91.67%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-fill-color: transparent;
-    font-family: YouSheBiaoTiHei, "PingFang SC", "Microsoft YaHei", sans-serif;
-    font-size: 36px;
-    letter-spacing: 0.15em;
+.bs-dialog-enter-active,
+.bs-dialog-leave-active {
+  .dialog-mask-anim {
+    transition: opacity 0.28s ease;
   }
 
-  .dialog-close {
-    justify-self: end;
-    margin: -4px -6px -4px 0;
-    min-width: 48px;
-    min-height: 48px;
+  .dialog-panel-anim {
+    transition:
+      opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
-.dialog-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border: 1px solid rgba(62, 224, 255, 0.45);
-  border-radius: 10px;
-  background: rgba(8, 36, 68, 0.5);
-  box-shadow: 0 0 12px rgba(62, 224, 255, 0.15);
-  cursor: pointer;
-  transition:
-    background 0.25s ease,
-    border-color 0.25s ease,
-    box-shadow 0.25s ease,
-    transform 0.2s ease;
-
-  &:hover {
-    background: rgba(62, 224, 255, 0.18);
-    border-color: rgba(62, 224, 255, 0.45);
-    box-shadow: 0 0 16px rgba(62, 224, 255, 0.32);
-    transform: scale(1.06);
-
-    .dialog-close__icon {
-      transform: rotate(90deg);
-      filter: drop-shadow(0 0 10px rgba(62, 224, 255, 0.75));
-    }
+.bs-dialog-enter-from,
+.bs-dialog-leave-to {
+  .dialog-mask-anim {
+    opacity: 0;
   }
 
-  &:active {
-    background: rgba(62, 224, 255, 0.32);
-    transform: scale(0.94);
+  .dialog-panel-anim {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
 
-    .dialog-close__icon {
-      transform: rotate(90deg) scale(0.92);
-    }
+  .dialog-panel-anim--full {
+    transform: translateY(10px) scale(0.985);
   }
 }
 
-.dialog-close__icon {
-  width: 20px;
-  height: 20px;
-  display: block;
-  pointer-events: none;
-  filter: drop-shadow(0 0 6px rgba(225, 234, 241, 0.45));
-  transition:
-    transform 0.28s cubic-bezier(0.34, 1.1, 0.64, 1),
-    filter 0.25s ease;
+.bs-dialog-enter-to,
+.bs-dialog-leave-from {
+  .dialog-mask-anim {
+    opacity: 1;
+  }
+
+  .dialog-panel-anim {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dialog-close:hover .dialog-close__icon,
-  .dialog-close:active .dialog-close__icon {
-    transform: none;
-  }
-
-  .dialog-close:hover,
-  .dialog-close:active {
-    transform: none;
-  }
-}
-
-.dialog-content {
-  padding: 24px 32px 32px;
-  overflow: hidden;
-
-  .dialog-content-scroll {
-    overflow: auto;
-
-    &::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-      background-color: transparent;
-      border-radius: 3px;
-      transition: all 0.3s;
+  .bs-dialog-enter-active,
+  .bs-dialog-leave-active {
+    .dialog-mask-anim,
+    .dialog-panel-anim {
+      transition: opacity 0.15s ease;
     }
+  }
 
-    &::-webkit-scrollbar-thumb {
-      border-radius: 3px;
-      background-color: #6091f8;
-      transition: all 0.3s;
+  .bs-dialog-enter-from,
+  .bs-dialog-leave-to {
+    .dialog-panel-anim,
+    .dialog-panel-anim--full {
+      transform: none;
     }
   }
 }

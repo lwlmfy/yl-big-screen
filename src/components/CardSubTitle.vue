@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import titleBg from "../assets/card-sub-title.png";
-
 defineProps({
   title: {
     type: String,

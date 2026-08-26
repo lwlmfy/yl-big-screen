@@ -1,4 +1,5 @@
 import type { ComputedRef, InjectionKey } from "vue";
+import type { DialogHost } from "./dialogService";
 
 export interface ScreenScaleSnapshot {
   contentWidth: number
@@ -16,6 +17,8 @@ export interface ScreenScaleSnapshot {
 
 export const SCREEN_SCALE_CONTEXT_KEY: InjectionKey<ComputedRef<ScreenScaleSnapshot | null>> =
   Symbol("screenScaleContext");
+
+export const DIALOG_HOST_KEY: InjectionKey<DialogHost> = Symbol("dialogHost");
 
 function buildScaleLayerBase(
   snapshot: ScreenScaleSnapshot,
@@ -46,14 +49,6 @@ function buildScaleLayerBase(
     zoom: 1,
     transform: `translate3d(0, 0, 0) scale(${snapshot.scaleX}, ${snapshot.scaleY})`
   };
-}
-
-/** 与 ProjectScreenScale 内容层一致，供 Teleport 弹窗同步缩放 */
-export function buildScreenScaleLayerStyle(
-  snapshot: ScreenScaleSnapshot,
-  position: "fixed" | "absolute" = "fixed"
-) {
-  return buildScaleLayerBase(snapshot, position, snapshot.anchorX, snapshot.anchorY);
 }
 
 /** 全屏弹窗画布：与主屏相同 offset + zoom/transform，内容 100% 铺满画布 */

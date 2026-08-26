@@ -1,18 +1,5 @@
 import type { ScreenScaleSnapshot } from "./screenScaleContext";
-
-const SUPPORTED_MODES = [
-  "contain",
-  "cover",
-  "stretch",
-  "width",
-  "height",
-  "fixed-height",
-  "fixed-width"
-];
-
-export function isMicroAppEnvironment() {
-  return !!(window as any).__MICRO_APP_ENVIRONMENT__;
-}
+import { computeScaleResult } from "./scaleMath";
 
 /** micro-app 子应用内获取真实顶层 window */
 export function getRawWindow(): Window {
@@ -76,40 +63,6 @@ export function resolveTeleportTarget(customSelector?: string): string | HTMLEle
   return document.body;
 }
 
-function clamp(value: number, minScale: number, maxScale: number) {
-  return Math.min(Math.max(value, minScale), maxScale);
-}
-
-function getAlignedOffset(remainSize: number, align: string) {
-  if (align === "start") {
-    return 0;
-  }
-  if (align === "end") {
-    return remainSize;
-  }
-  return remainSize / 2;
-}
-
-function resolveRenderMode(
-  scaleX: number,
-  scaleY: number,
-  renderMode: string | undefined
-) {
-  if (renderMode === "transform" || renderMode === "zoom") {
-    return renderMode;
-  }
-
-  const supportsZoom = typeof CSS !== "undefined" && CSS.supports?.("zoom", "1");
-  const isUniformScale = Math.abs(scaleX - scaleY) < 0.001;
-  const isUpscaling = scaleX > 1.001 || scaleY > 1.001;
-
-  if (supportsZoom && isUniformScale && isUpscaling) {
-    return "zoom";
-  }
-
-  return "transform";
-}
-
 /** teleportDialog 时按顶层屏幕视口计算缩放（与子应用容器无关） */
 export function buildViewportScaleSnapshot(options: {
   designWidth: number
@@ -122,80 +75,25 @@ export function buildViewportScaleSnapshot(options: {
   maxScale?: number
   disabledScale?: boolean
 }): ScreenScaleSnapshot {
-  const {
-    designWidth,
-    designHeight,
-    scaleMode = "fixed-height",
-    alignX = "center",
-    alignY = "center",
-    renderMode,
-    minScale = 0,
-    maxScale = Infinity,
-    disabledScale = false
-  } = options;
-
   const { width: vw, height: vh } = getTopViewportSize();
-  const safeWidth = vw > 0 ? vw : designWidth;
-  const safeHeight = vh > 0 ? vh : designHeight;
-
-  let scaleX = 1;
-  let scaleY = 1;
-  let contentWidth = designWidth;
-  let contentHeight = designHeight;
-
-  const mode = SUPPORTED_MODES.includes(scaleMode) ? scaleMode : "fixed-height";
-
-  if (!disabledScale) {
-    const widthRatio = safeWidth / designWidth;
-    const heightRatio = safeHeight / designHeight;
-
-    if (mode === "stretch") {
-      scaleX = clamp(widthRatio, minScale, maxScale);
-      scaleY = clamp(heightRatio, minScale, maxScale);
-    } else if (mode === "cover") {
-      const scale = clamp(Math.max(widthRatio, heightRatio), minScale, maxScale);
-      scaleX = scale;
-      scaleY = scale;
-    } else if (mode === "width") {
-      const scale = clamp(widthRatio, minScale, maxScale);
-      scaleX = scale;
-      scaleY = scale;
-    } else if (mode === "height") {
-      const scale = clamp(heightRatio, minScale, maxScale);
-      scaleX = scale;
-      scaleY = scale;
-    } else if (mode === "fixed-height") {
-      const scale = clamp(heightRatio, minScale, maxScale);
-      scaleX = scale;
-      scaleY = scale;
-      contentWidth = safeWidth / scale;
-    } else if (mode === "fixed-width") {
-      const scale = clamp(widthRatio, minScale, maxScale);
-      scaleX = scale;
-      scaleY = scale;
-      contentHeight = safeHeight / scale;
-    } else {
-      const scale = clamp(Math.min(widthRatio, heightRatio), minScale, maxScale);
-      scaleX = scale;
-      scaleY = scale;
-    }
-  }
-
-  const scaledWidth = contentWidth * scaleX;
-  const scaledHeight = contentHeight * scaleY;
-  const offsetX = getAlignedOffset(safeWidth - scaledWidth, alignX);
-  const offsetY = getAlignedOffset(safeHeight - scaledHeight, alignY);
+  const result = computeScaleResult({
+    containerWidth: vw,
+    containerHeight: vh,
+    designWidth: options.designWidth,
+    designHeight: options.designHeight,
+    scaleMode: options.scaleMode,
+    alignX: options.alignX,
+    alignY: options.alignY,
+    renderMode: options.renderMode,
+    minScale: options.minScale,
+    maxScale: options.maxScale,
+    disabledScale: options.disabledScale
+  });
 
   return {
-    contentWidth,
-    contentHeight,
-    scaleX,
-    scaleY,
-    offsetX,
-    offsetY,
+    ...result,
     anchorX: 0,
     anchorY: 0,
-    renderMode: resolveRenderMode(scaleX, scaleY, renderMode),
     basedOnViewport: true
   };
 }

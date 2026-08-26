@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import { computeScaleResult } from "../composables/scaleMath";
 
 const props = defineProps({
   width: {
@@ -90,16 +91,6 @@ const state = reactive({
   renderMode: "zoom"
 });
 
-const supportedModes = ["contain", "cover", "stretch", "width", "height", "fixed-height", "fixed-width"];
-
-function getMode() {
-  return supportedModes.includes(props.mode) ? props.mode : "fixed-height";
-}
-
-function clamp(value: number) {
-  return Math.min(Math.max(value, props.minScale), props.maxScale);
-}
-
 function getContainerElement() {
   if (props.containerSelector) {
     const target = document.querySelector(props.containerSelector);
@@ -110,10 +101,6 @@ function getContainerElement() {
 
   if (wrapperRef.value?.parentElement) {
     return wrapperRef.value.parentElement;
-  }
-
-  if ((window as any).__MICRO_APP_ENVIRONMENT__) {
-    return document.querySelector("#q-app") || document.documentElement;
   }
 
   return document.documentElement;
@@ -146,95 +133,34 @@ function getContainerRect() {
   };
 }
 
-function getAlignedOffset(remainSize: number, align: string) {
-  if (align === "start") {
-    return 0;
-  }
-
-  if (align === "end") {
-    return remainSize;
-  }
-
-  return remainSize / 2;
-}
-
-function getRenderMode(scaleX: number, scaleY: number) {
-  if (props.renderMode === "transform" || props.renderMode === "zoom") {
-    return props.renderMode;
-  }
-
-  const supportsZoom = typeof CSS !== "undefined" && CSS.supports?.("zoom", "1");
-  const isUniformScale = Math.abs(scaleX - scaleY) < 0.001;
-  const isUpscaling = scaleX > 1.001 || scaleY > 1.001;
-
-  if (supportsZoom && isUniformScale && isUpscaling) {
-    return "zoom";
-  }
-
-  return "transform";
-}
-
 function updateScale() {
   const { width, height } = getContainerRect();
+  const result = computeScaleResult({
+    containerWidth: width,
+    containerHeight: height,
+    designWidth: props.width,
+    designHeight: props.height,
+    scaleMode: props.mode,
+    alignX: props.alignX,
+    alignY: props.alignY,
+    renderMode: props.renderMode,
+    minScale: props.minScale,
+    maxScale: props.maxScale,
+    disabledScale: props.disabled
+  });
+
   const safeWidth = width > 0 ? width : props.width;
   const safeHeight = height > 0 ? height : props.height;
 
-  let scaleX = 1;
-  let scaleY = 1;
-  let contentWidth = props.width;
-  let contentHeight = props.height;
-
-  if (!props.disabled) {
-    const widthRatio = safeWidth / props.width;
-    const heightRatio = safeHeight / props.height;
-    const mode = getMode();
-
-    if (mode === "stretch") {
-      scaleX = clamp(widthRatio);
-      scaleY = clamp(heightRatio);
-    } else if (mode === "cover") {
-      const scale = clamp(Math.max(widthRatio, heightRatio));
-      scaleX = scale;
-      scaleY = scale;
-    } else if (mode === "width") {
-      const scale = clamp(widthRatio);
-      scaleX = scale;
-      scaleY = scale;
-    } else if (mode === "height") {
-      const scale = clamp(heightRatio);
-      scaleX = scale;
-      scaleY = scale;
-    } else if (mode === "fixed-height") {
-      const scale = clamp(heightRatio);
-      scaleX = scale;
-      scaleY = scale;
-      contentWidth = safeWidth / scale;
-    } else if (mode === "fixed-width") {
-      const scale = clamp(widthRatio);
-      scaleX = scale;
-      scaleY = scale;
-      contentHeight = safeHeight / scale;
-    } else {
-      const scale = clamp(Math.min(widthRatio, heightRatio));
-      scaleX = scale;
-      scaleY = scale;
-    }
-  }
-
-  const scaledWidth = contentWidth * scaleX;
-  const scaledHeight = contentHeight * scaleY;
-  const offsetX = getAlignedOffset(safeWidth - scaledWidth, props.alignX);
-  const offsetY = getAlignedOffset(safeHeight - scaledHeight, props.alignY);
-
   state.containerWidth = safeWidth;
   state.containerHeight = safeHeight;
-  state.contentWidth = contentWidth;
-  state.contentHeight = contentHeight;
-  state.scaleX = scaleX;
-  state.scaleY = scaleY;
-  state.offsetX = Number.isFinite(offsetX) ? offsetX : 0;
-  state.offsetY = Number.isFinite(offsetY) ? offsetY : 0;
-  state.renderMode = getRenderMode(scaleX, scaleY);
+  state.contentWidth = result.contentWidth;
+  state.contentHeight = result.contentHeight;
+  state.scaleX = result.scaleX;
+  state.scaleY = result.scaleY;
+  state.offsetX = result.offsetX;
+  state.offsetY = result.offsetY;
+  state.renderMode = result.renderMode;
 
   const wrapperRect = wrapperRef.value?.getBoundingClientRect();
   state.anchorX = (wrapperRect?.left ?? 0) + state.offsetX;
@@ -243,9 +169,9 @@ function updateScale() {
   emit("update", {
     width: safeWidth,
     height: safeHeight,
-    scaleX,
-    scaleY,
-    scale: Math.min(scaleX, scaleY),
+    scaleX: result.scaleX,
+    scaleY: result.scaleY,
+    scale: Math.min(result.scaleX, result.scaleY),
     offsetX: state.offsetX,
     offsetY: state.offsetY,
     contentWidth: state.contentWidth,
@@ -258,11 +184,9 @@ function updateScale() {
 
 function refresh() {
   cancelAnimationFrame(frameId.value);
-  // 拖动窗口时禁用过渡动画，避免卡顿
   isResizing.value = true;
   clearTimeout(resizeTimer.value);
   frameId.value = requestAnimationFrame(updateScale);
-  // 停止拖动 200ms 后恢复过渡动画
   resizeTimer.value = setTimeout(() => {
     isResizing.value = false;
   }, 200);
@@ -300,7 +224,6 @@ onMounted(() => {
   nextTick(() => {
     refresh();
     bindResizeObserver();
-    // 初始加载后延迟恢复过渡
     requestAnimationFrame(() => {
       resizeTimer.value = setTimeout(() => {
         isResizing.value = false;

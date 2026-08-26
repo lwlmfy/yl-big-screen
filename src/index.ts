@@ -8,6 +8,8 @@ export { default as DialogContainer } from "./components/dialog/DialogContainer.
 export {
   openBigScreenDialog,
   closeDialog,
-  dialogs
+  dismissDialog,
+  dialogs,
+  createDialogHost
 } from "./composables/dialogService";
-export type { DialogItem } from "./composables/dialogService";
+export type { DialogItem, DialogHost } from "./composables/dialogService";

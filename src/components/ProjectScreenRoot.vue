@@ -1,11 +1,25 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, provide, ref, useSlots, watch } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
+  useSlots,
+  watch
+} from "vue";
 import DialogContainer from "./dialog/DialogContainer.vue";
 import ProjectScreenScale from "./ProjectScreenScale.vue";
 import {
+  DIALOG_HOST_KEY,
   SCREEN_SCALE_CONTEXT_KEY,
   type ScreenScaleSnapshot
 } from "../composables/screenScaleContext";
+import {
+  createDialogHost,
+  registerDialogHost,
+  unregisterDialogHost
+} from "../composables/dialogService";
 import {
   buildViewportScaleSnapshot,
   getRawWindow,
@@ -115,6 +129,16 @@ const props = defineProps({
   teleportTo: {
     type: String,
     default: ""
+  },
+  /**
+   * 弹窗缩放基准：
+   * - viewport：顶层屏幕视口（嵌套主应用 / micro-app 默认）
+   * - screen：跟随 ProjectScreenScale 实际容器
+   */
+  dialogScaleSource: {
+    type: String,
+    default: "viewport",
+    validator: (value: string) => ["viewport", "screen"].includes(value)
   }
 });
 
@@ -122,10 +146,11 @@ const emit = defineEmits(["title-click", "scale-update"]);
 
 const slots = useSlots();
 const scaleRef = ref<InstanceType<typeof ProjectScreenScale>>();
+const dialogHost = createDialogHost();
 
 const currentDate = ref("");
 const currentTime = ref("");
-let timer: ReturnType<typeof setInterval>;
+let timer: ReturnType<typeof setInterval> | undefined;
 
 function updateTime() {
   const now = new Date();
@@ -140,39 +165,38 @@ function updateTime() {
   currentTime.value = `${h}:${min}:${s}`;
 }
 
-onMounted(() => {
+function startClock() {
+  if (timer) {
+    return;
+  }
   updateTime();
   timer = setInterval(updateTime, 1000);
+}
 
-  if (props.teleportDialog) {
-    teleportTarget.value = resolveTeleportTarget(props.teleportTo || undefined);
-    refreshViewportDialogScale();
-    bindViewportListeners();
+function stopClock() {
+  if (!timer) {
+    return;
   }
-});
-
-onBeforeUnmount(() => {
   clearInterval(timer);
-  unbindViewportListeners();
-});
+  timer = undefined;
+}
 
-function handleTitleClick(event: Event) {
-  emit("title-click", event);
-  // if ((window as any).__MICRO_APP_ENVIRONMENT__) {
-  //   (window as any).microApp?.dispatch({type: "openShowMenu"});
-  //   return;
-  // }
-  // if (window.self !== window.top) {
-  //   window.parent.postMessage({type: "openShowMenu"}, "*");
-  // }
+function syncClock() {
+  const needClock = props.showDateTime && !slots["header-right"];
+  if (needClock) {
+    startClock();
+  } else {
+    stopClock();
+  }
 }
 
 const screenScaleSnapshot = ref<ScreenScaleSnapshot | null>(null);
+const screenContainerSnapshot = ref<ScreenScaleSnapshot | null>(null);
 const teleportTarget = ref<string | HTMLElement>("body");
 let viewportResizeTarget: Window | null = null;
 
 function refreshViewportDialogScale() {
-  if (!props.teleportDialog) {
+  if (!props.teleportDialog || props.dialogScaleSource !== "viewport") {
     return;
   }
 
@@ -190,6 +214,9 @@ function refreshViewportDialogScale() {
 }
 
 function bindViewportListeners() {
+  if (!props.teleportDialog || props.dialogScaleSource !== "viewport") {
+    return;
+  }
   viewportResizeTarget = getRawWindow();
   viewportResizeTarget.addEventListener("resize", refreshViewportDialogScale);
   viewportResizeTarget.addEventListener("scroll", refreshViewportDialogScale, true);
@@ -204,19 +231,43 @@ function unbindViewportListeners() {
 }
 
 function handleScaleUpdate(payload: any) {
-  refreshViewportDialogScale();
+  screenContainerSnapshot.value = {
+    contentWidth: payload.contentWidth,
+    contentHeight: payload.contentHeight,
+    scaleX: payload.scaleX,
+    scaleY: payload.scaleY,
+    offsetX: payload.offsetX,
+    offsetY: payload.offsetY,
+    anchorX: payload.anchorX,
+    anchorY: payload.anchorY,
+    renderMode: payload.renderMode,
+    basedOnViewport: false
+  };
+
+  if (props.teleportDialog && props.dialogScaleSource === "viewport") {
+    refreshViewportDialogScale();
+  }
+
   emit("scale-update", payload);
 }
 
-const screenScaleContext = computed(() =>
-  props.teleportDialog ? screenScaleSnapshot.value : null
-);
+const screenScaleContext = computed(() => {
+  if (!props.teleportDialog) {
+    return null;
+  }
+  if (props.dialogScaleSource === "screen") {
+    return screenContainerSnapshot.value;
+  }
+  return screenScaleSnapshot.value;
+});
 
 provide(SCREEN_SCALE_CONTEXT_KEY, screenScaleContext);
+provide(DIALOG_HOST_KEY, dialogHost);
 
 watch(
   () => [
     props.teleportDialog,
+    props.dialogScaleSource,
     props.width,
     props.height,
     props.scaleMode,
@@ -229,13 +280,49 @@ watch(
     props.teleportTo
   ],
   () => {
+    unbindViewportListeners();
     if (!props.teleportDialog) {
       return;
     }
     teleportTarget.value = resolveTeleportTarget(props.teleportTo || undefined);
-    refreshViewportDialogScale();
+    if (props.dialogScaleSource === "viewport") {
+      refreshViewportDialogScale();
+      bindViewportListeners();
+    }
   }
 );
+
+watch(
+  () => [props.showDateTime, !!slots["header-right"]],
+  () => syncClock()
+);
+
+onMounted(() => {
+  registerDialogHost(dialogHost);
+  syncClock();
+
+  if (props.teleportDialog) {
+    teleportTarget.value = resolveTeleportTarget(props.teleportTo || undefined);
+    if (props.dialogScaleSource === "viewport") {
+      refreshViewportDialogScale();
+      bindViewportListeners();
+    }
+  }
+});
+
+onBeforeUnmount(() => {
+  stopClock();
+  unbindViewportListeners();
+  dialogHost.closeAll();
+  unregisterDialogHost(dialogHost);
+});
+
+function handleTitleClick(event: Event) {
+  if (!props.titleClickable) {
+    return;
+  }
+  emit("title-click", event);
+}
 
 const pageBgUrl = computed(() =>
   props.pageBackgroundImage ? props.pageBackgroundImage : defaultPageBg
@@ -318,7 +405,6 @@ defineExpose({
         <DialogContainer v-if="!teleportDialog"/>
       </div>
 
-      <!-- micro-app：挂到真实屏幕 body；弹窗按顶层视口缩放，全屏弹窗铺满整屏 -->
       <Teleport v-if="teleportDialog" :to="teleportTarget">
         <div class="project-screen-teleport-dialog">
           <DialogContainer/>
@@ -339,7 +425,7 @@ defineExpose({
   box-sizing: border-box;
   border: 1px solid rgba(98, 146, 221, 0.12);
   box-shadow: inset 0 0 0 1px rgba(125, 170, 255, 0.04);
-  /* background 由 inline style 设置 */}
+}
 
 .project-screen-header {
   position: relative;
@@ -351,7 +437,6 @@ defineExpose({
   padding: 0 24px;
   box-sizing: border-box;
   overflow: hidden;
-  /* background 由 inline style 设置 */
 }
 
 .project-screen-header__side {
@@ -370,7 +455,6 @@ defineExpose({
   align-items: flex-start;
 }
 
-
 .project-screen-title {
   text-align: center;
   font-family: YouSheBiaoTiHei, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -380,7 +464,7 @@ defineExpose({
   line-height: 50px;
   letter-spacing: 20px;
   background-image: linear-gradient(to top, #5ad2df 10%, #fff 50%);
-  cursor: pointer;
+  cursor: default;
   padding-top: 3px;
 }
 
@@ -421,7 +505,6 @@ defineExpose({
   box-sizing: border-box;
 }
 
-/* teleport 到主应用 body，与默认弹窗遮罩层级一致；配合 Element 弹出层（默认 >=2000）正常显示 */
 .project-screen-teleport-dialog {
   position: fixed;
   inset: 0;

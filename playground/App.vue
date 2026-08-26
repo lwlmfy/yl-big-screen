@@ -25,6 +25,14 @@ const FullDialog = defineComponent({
           }
         }, "计数 +1"),
         h("button", {
+          onClick: () => openLargeDialog(),
+          style: {
+            padding: "8px 20px", marginRight: "12px", cursor: "pointer",
+            background: "rgba(255,212,59,0.15)", border: "1px solid rgba(255,212,59,0.4)",
+            color: "#ffd43b", borderRadius: "6px", fontSize: "14px"
+          }
+        }, "再开一层弹窗"),
+        h("button", {
           onClick: () => props.close?.("done"),
           style: {
             padding: "8px 20px", cursor: "pointer",
@@ -47,7 +55,7 @@ function openFullDialog() {
 // ── 大尺寸弹窗内容 ──
 const LargeDialog = defineComponent({
   props: { close: Function },
-  setup() {
+  setup(props) {
     return () =>
       h("div", { style: { padding: "20px", color: "#d7e6ff" } }, [
         h("p", { style: { fontSize: "16px", marginBottom: "12px" } }, "大尺寸弹窗 (size=large) —— 适合表格、图表等复杂内容。"),
@@ -74,7 +82,7 @@ function openLargeDialog() {
 // ── 无头部弹窗内容 ──
 const NoHeaderDialog = defineComponent({
   props: { close: Function },
-  setup() {
+  setup(props) {
     return () =>
       h("div", { style: { padding: "20px", color: "#d7e6ff" } }, [
         h("p", { style: { fontSize: "16px", marginBottom: "12px" } }, "无头部弹窗 (showHeader=false) —— 隐藏标题栏，仅保留右上角关闭按钮。"),
@@ -132,7 +140,6 @@ const rightItems = [
     content-padding="0 10px 10px"
     :teleport-dialog="true"
   >
-    <!-- 不传 header-left / header-right，右侧默认显示年月日时间 -->
 
     <!-- 主内容 -->
     <div style="display: grid; grid-template-columns: 420px 1fr 420px; gap: 16px; height: 100%;">
@@ -208,10 +215,10 @@ const rightItems = [
               >无头部弹窗</button>
             </div>
             <div style="color: rgba(221,239,255,0.55); font-size: 13px; line-height: 1.8; margin-top: 8px;">
-              <div>标题右侧默认显示当前年月日时间</div>
-              <div>传 showDateTime=false 可隐藏时间</div>
-              <div>传 header-right 插槽会覆盖默认时间</div>
-              <div>调整窗口大小查看自适应缩放</div>
+              <div>右上角时间默认关闭（showDateTime=false）</div>
+              <div>传 header-right 插槽可自定义右侧内容</div>
+              <div>dialogScaleSource=viewport（默认）适配嵌套主应用弹窗</div>
+              <div>调整窗口大小查看自适应缩放（fixed-height）</div>
             </div>
           </div>
         </ProjectPanelShell>

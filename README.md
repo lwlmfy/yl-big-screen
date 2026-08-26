@@ -70,20 +70,21 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 | `minScale` | `Number` | `0` | 最小缩放比例 |
 | `maxScale` | `Number` | `Infinity` | 最大缩放比例 |
 | `showHeader` | `Boolean` | `true` | 是否显示顶部标题栏 |
-| `showDateTime` | `Boolean` | `true` | 是否在标题栏右侧显示当前年月日时间（header-right 插槽可覆盖） |
+| `showDateTime` | `Boolean` | `false` | 是否在标题栏右侧显示当前年月日时间（header-right 插槽可覆盖） |
 | `headerHeight` | `Number` | `80` | 标题栏高度（px） |
 | `background` | `String` | `"#07111f"` | 背景色 |
 | `pageBackgroundImage` | `String` | `""` | 页面背景图 URL（推荐传入 .svg） |
 | `headerBackgroundImage` | `String` | `""` | 标题栏背景图 URL（推荐传入 .png） |
 | `contentPadding` | `String` | `"0 10px 10px"` | 内容区内边距 |
 | `gap` | `Number` | `18` | 标题栏与内容区间距（px） |
-| `enableMenuBridge` | `Boolean` | `true` | 点击标题时通过 postMessage 通知父窗口打开菜单 |
 | `titleClickable` | `Boolean` | `true` | 标题是否可点击 |
 | `overflowHidden` | `Boolean` | `true` | 缩放容器是否隐藏溢出 |
 | `useResizeObserver` | `Boolean` | `true` | 使用 ResizeObserver 监听容器尺寸 |
 | `listenWindowResize` | `Boolean` | `true` | 监听 window resize 事件 |
 | `containerSelector` | `String` | `""` | 自定义缩放参考容器的 CSS 选择器 |
 | `teleportDialog` | `Boolean` | `true` | 是否将弹窗容器 Teleport 到 body，避免缩放容器内 z-index/裁剪问题 |
+| `teleportTo` | `String` | `""` | Teleport 目标选择器（micro-app 下可挂到主应用节点） |
+| `dialogScaleSource` | `String` | `"viewport"` | 弹窗缩放基准：`viewport`（顶层视口，适配嵌套主应用）/ `screen`（跟随大屏容器） |
 
 **Slots**
 
@@ -92,7 +93,7 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 | `default` | `ScreenState` | 主内容区 |
 | `title` | `ScreenState` | 自定义标题内容 |
 | `header-left` | `ScreenState` | 标题栏左侧区域 |
-| `header-right` | `ScreenState` | 标题栏右侧区域（不传时默认显示年月日时间） |
+| `header-right` | `ScreenState` | 标题栏右侧区域（不传且 `showDateTime=true` 时显示年月日时间） |
 
 **ScreenState 类型**
 
@@ -293,7 +294,7 @@ import { ProjectScreenRoot, ProjectPanelShell, openBigScreenDialog } from "yl-bi
 |---|---|---|---|
 | `title` | `String` | — | 弹窗标题 |
 | `modelValue` | `Boolean` | — | 控制显示/隐藏 |
-| `size` | `String` | `"medium"` | 预设尺寸：`medium` / `large` / `full` |
+| `size` | `String` | `"full"` | 预设尺寸：`medium` / `large` / `full` |
 | `width` | `String` | — | 自定义宽度 |
 | `height` | `String` | — | 自定义高度 |
 | `closeOnClickMask` | `Boolean` | `true` | 点击遮罩层是否关闭 |
